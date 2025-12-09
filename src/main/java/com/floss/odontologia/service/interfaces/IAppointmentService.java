@@ -10,14 +10,14 @@ public interface IAppointmentService {
     //create
     public String createAppo(Appointment appointment);
     //read
-    public Appointment getAppointmentById(String id);
+    public Appointment getAppointmentById(Long id);
     public List<Appointment> getAllAppointments();
     public int getAppointmentNumberToday(Dentist dentist);
 
     //update
     public String editAppo(Appointment appointment);
     //delete
-    public String deleteAppo(String id);
+    public String deleteAppo(Long id);
 
 
 }

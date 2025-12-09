@@ -7,7 +7,7 @@ import java.util.List;
 public interface IRoleService {
 
     //read
-    public Role getRole(String username);
+    public Role knowRoleByUser(String username);
     public List<Role> getListRoles();
     //update
     public String editRole(Role role);

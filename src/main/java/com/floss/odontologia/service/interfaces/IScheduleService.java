@@ -10,7 +10,7 @@ public interface IScheduleService {
     public String createSchedule(Schedule schedule);
 
     //read
-    public Schedule getScheduleById(String scheduleId);
+    public Schedule getScheduleById(Long id);
     public List<Schedule> getAllSchedules();
 
     public void editSchedule(Schedule schedule);

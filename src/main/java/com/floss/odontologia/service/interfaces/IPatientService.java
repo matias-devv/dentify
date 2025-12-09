@@ -19,7 +19,7 @@ public interface IPatientService {
     //update
     public String editPatient(Patient patient);
     //delete
-    public String deletePatient(String id);
+    public String deletePatient(Long id);
 
 
 }
