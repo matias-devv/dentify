@@ -1,5 +1,6 @@
 package com.floss.odontologia.controller;
 
+import com.floss.odontologia.dto.request.UserDTO;
 import com.floss.odontologia.model.User;
 import com.floss.odontologia.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,12 @@ public class UserController {
     private IUserService iUserService;
 
     @PostMapping("/create")
-    public String createUser(@RequestBody User user){
-        return iUserService.createUser(user);
+    public String createUser(@RequestBody UserDTO userDTO){
+        return iUserService.createUser(userDTO);
     }
 
+    @PostMapping("/validate")
+    public String validateUser(@RequestBody User user){
+        return iUserService.validateUser(user);
+    }
 }

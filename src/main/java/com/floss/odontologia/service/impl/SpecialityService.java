@@ -23,7 +23,7 @@ public class SpecialityService implements ISpecialityService {
 
         for (Speciality spe : listSpe) {
 
-            if ( spe.getName().equals(name) ) {
+            if ( spe.getName().equalsIgnoreCase(name) ) {
                 speFound = iSpecialityRepository.findById( spe.getId_speciality() ).orElse(null);
                 return speFound;
             }

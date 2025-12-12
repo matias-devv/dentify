@@ -175,7 +175,6 @@ public class AppointmentService implements IAppointmentService {
         dto.setId_appointment(appo.getId_appointment());
         dto.setDate(appo.getDate());
         dto.setStartTime(appo.getStartTime());
-        dto.setEndTime(appo.getEndTime());
         dto.setId_dentist(appo.getDentist().getId_dentist());
         dto.setName_dentist(appo.getDentist().getName());
         dto.setSurname_dentist(appo.getDentist().getSurname());

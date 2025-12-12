@@ -54,4 +54,18 @@ public class RoleService implements IRoleService {
         iRoleRepository.save(role);
         return "The role was edited succesfully";
     }
+
+    @Override
+    public Role findRoleByName(String role) {
+        List<Role> list = iRoleRepository.findAll();
+        if(list.isEmpty()){
+            return null;
+        }
+        for(Role roleEntity : list){
+            if(  roleEntity.getName().equals(role)){
+                return roleEntity;
+            }
+        }
+        return null;
+    }
 }

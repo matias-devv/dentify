@@ -14,4 +14,5 @@ public interface IRoleService {
     //update
     public String editRole(Role role);
 
+    public Role findRoleByName(String role);
 }

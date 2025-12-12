@@ -11,7 +11,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id_user;
 
-    //agregar mas tarde
     private String username;
     private String password;
 
