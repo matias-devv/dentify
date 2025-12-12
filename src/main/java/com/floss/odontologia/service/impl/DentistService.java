@@ -3,15 +3,15 @@ package com.floss.odontologia.service.impl;
 import com.floss.odontologia.dto.response.AppointmentDTO;
 import com.floss.odontologia.dto.response.DentistDTO;
 import com.floss.odontologia.dto.response.PatientDTO;
+import com.floss.odontologia.dto.response.ScheduleDTO;
 import com.floss.odontologia.model.Appointment;
 import com.floss.odontologia.model.Dentist;
-import com.floss.odontologia.model.Patient;
-import com.floss.odontologia.repository.IAppointmentRepository;
+import com.floss.odontologia.model.Schedule;
 import com.floss.odontologia.repository.IDentistRepository;
-import com.floss.odontologia.repository.IPatientRepository;
 import com.floss.odontologia.service.interfaces.IAppointmentService;
 import com.floss.odontologia.service.interfaces.IDentistService;
 import com.floss.odontologia.service.interfaces.IPatientService;
+import com.floss.odontologia.service.interfaces.IScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +29,9 @@ public class DentistService implements IDentistService {
 
     @Autowired
     private IPatientService iPatientService;
+
+    @Autowired
+    private IScheduleService iScheduleService;
 
     @Override
     public String createDentist(Dentist dentist) {
@@ -107,6 +110,42 @@ public class DentistService implements IDentistService {
         dto.setSurname(dentist.getSurname());
         dto.setDni(dentist.getDni());
         dto.setSpecialty(dentist.getSpeciality().getName());
+
+        //clean list of schedules for the dto
+        dto = this.setAttributesOfSchedulesDtos(dentist.getSchedulesList(), dto);
+        dto = this.setAttributesOfAppointmentsDtos(dentist.getAppointmentList(), dto);
+        return dto;
+    }
+
+    private DentistDTO setAttributesOfSchedulesDtos(List<Schedule> schedulesList, DentistDTO dto) {
+
+        List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+        if(schedulesList != null){
+            for (Schedule schedule : schedulesList) {
+                 //for each schedule -> dto
+                 ScheduleDTO scheduleDto = iScheduleService.setAttributesDto(schedule);
+                 //dto -> list dtos
+                 scheduleDTOS.add(scheduleDto);
+            }
+        }
+        //I set the list of the schedules to the dentistDTO
+        dto.setSchedules(scheduleDTOS);
+        return dto;
+    }
+
+    private DentistDTO setAttributesOfAppointmentsDtos(List<Appointment> appointmentList, DentistDTO dto) {
+
+        List<AppointmentDTO> appointmentDTOS = new ArrayList<>();
+        if( appointmentList != null){
+            for (Appointment appointment : appointmentList) {
+                //for each appointment -> dto
+                AppointmentDTO appoDto = iAppointmentService.setAttributesDto(appointment);
+                //dto -> list dtos
+                appointmentDTOS.add(appoDto);
+            }
+        }
+        //I set the list of the schedules to the dentistDTO
+        dto.setAppointments(appointmentDTOS);
         return dto;
     }
 }

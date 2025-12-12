@@ -16,6 +16,7 @@ public class ScheduleDTO {
     private LocalTime end_time;
     private LocalDate date_from;
     private LocalDate date_to;
+    private String day_week;
     private boolean active;
 
 

@@ -1,10 +1,13 @@
 package com.floss.odontologia.service.impl;
 
 import com.floss.odontologia.dto.response.AppointmentDTO;
+import com.floss.odontologia.dto.response.DentistDTO;
+import com.floss.odontologia.dto.response.ScheduleDTO;
 import com.floss.odontologia.model.Appointment;
 import com.floss.odontologia.model.Dentist;
 import com.floss.odontologia.model.Schedule;
 import com.floss.odontologia.repository.IAppointmentRepository;
+import com.floss.odontologia.repository.IDentistRepository;
 import com.floss.odontologia.service.interfaces.IAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,9 @@ public class AppointmentService implements IAppointmentService {
 
     @Autowired
     private IAppointmentRepository iAppointmentRepository;
+
+    @Autowired
+    private IDentistRepository iDentistRepository;
 
     @Override
     public String createAppo(Appointment appointment) {
@@ -63,93 +69,87 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public List<LocalTime> getHoursOfDentist(LocalDate choosenDate, Dentist dentist, String selectedDay) {
+    public List<LocalTime> getHoursOfDentist(LocalDate choosenDate, Long id_dentist, String selectedDay) {
         //Max has that amount to prevent it from returning too many time slots.
         int max = 22;
         int counter = 0;
 
         //I get the schedules of the dentist
-        List<Schedule> schedules = dentist.getSchedulesList();
-        List<LocalTime> hours = new ArrayList<>();
+        Dentist dentist = iDentistRepository.findById(id_dentist).orElse(null);
 
-        //I initialize the variable that I'm goint to use to compare with the "date_from" and "date_until"
-        LocalDate today = LocalDate.now();
+        if ( dentist != null) {
+            List<Schedule> schedules = dentist.getSchedulesList();
+            List<LocalTime> hours = new ArrayList<>();
+            //I initialize the variable that I'm goint to use to compare with the "date_from" and "date_until"
+            LocalDate today = LocalDate.now();
 
-        //I need to cut this schedules in "30 minutes"
-        for (Schedule sche : schedules) {
+            if (schedules != null) {
+                for (Schedule schedule : schedules) {
+                    //if the schedule is not active -> null
+                    if (!schedule.isActive()) {
+                        return null;
+                    }
+                    //if the day selected and the day in the schedule are not equals -> null
+                    if (!schedule.getDayWeek().equalsIgnoreCase(selectedDay)) {
+                        return null;
+                    }
+                    //if the startTime < endTime && the endTime > startTime -> null
+                    if (!schedule.getStartTime().isBefore(schedule.getEndTime()) && !schedule.getEndTime().isAfter(schedule.getStartTime())) {
+                        return null;
+                    }
+                    //if today is before schedule get date to -> null
+                    if (today.isBefore(schedule.getDate_to())) {
+                        return null;
+                    }
 
-            //I need to check if the schedule is active
-            if ( sche.isActive() ) {
+                    //this "slot" is a sort of "accumulator"
+                    LocalTime slot = schedule.getStartTime();
 
-                //I initialize this kind of "acumulator"
-                LocalTime slot = sche.getStartTime();
-
-                //I need to check if the schedule is on time ( example: dateFrom: 1/10/25 < |appointment| > dateTo: 1/12/25)
-                if ( today.isBefore( sche.getDate_to()) ) {
-
-                    //I check if the schedules of the dentist and the daySelected are the same
-                    if ( sche.getDayWeek().equalsIgnoreCase(selectedDay)) {
-
-                        //I check if the starTime < finalTime && if the finalTime > startTime
-                        if (sche.getStartTime().isBefore(sche.getEndTime()) && sche.getEndTime().isAfter(sche.getStartTime()) ){
-
-                                //while “plus” minus 30 minutes is less than the final time of the schedule
-                                while ( slot.isBefore(sche.getEndTime().minusMinutes(30)) ) {
-
-                                    //I add 30 minutes to this initial “slot” and add it to the list of “hours.”
-                                    slot = slot.plusMinutes(30);
-                                    hours.add(slot);
-                                    counter++;
-
-                                    //If the slots are over "twenty" I return the list because is too much slots for one work day
-                                    if (counter >= max) {
-                                        return hours;
-                                    }
-
-                                }
+                    while (slot.isBefore(schedule.getEndTime().minusMinutes(30))) {
+                        //I add 30 minutes to this initial “slot” and add it to the list of “hours.”
+                        slot = slot.plusMinutes(30);
+                        hours.add(slot);
+                        counter++;
+                        System.out.println("contador: " + counter);
+                        //If the slots are over "twenty" I return the list because is too much slots for one work day
+                        if (counter >= max) {
+                            return hours;
                         }
                     }
                 }
             }
+            //This removes the hours dedicated to other appointments -> they are not available for use
+            hours = this.checkAppointments(choosenDate, dentist, hours);
+            return hours;
         }
-
-        hours = this.checkAppointments(choosenDate, dentist, hours);
-
-        return hours;
+        return null;
     }
 
     @Override
     public List<LocalTime> checkAppointments(LocalDate choosenDate, Dentist dentist, List<LocalTime> hours) {
 
-        List <Appointment> listAppo = iAppointmentRepository.findAll();
+        List <Appointment> listAppo = dentist.getAppointmentList();
         List <LocalTime> removeHours = new ArrayList<>();
 
-        if (!listAppo.isEmpty()){
-            //I go through the entire list of appointments
-            for(Appointment appo : listAppo){
+        //if the appointments are null -> the patient can use the full range of hours in the schedule
+        if( listAppo == null){
+            return hours;
+        }
+        for (Appointment appo : listAppo) {
 
-                //If the appointment is asigned to the dentist -> ok
-                if (appo.getDentist().getId_dentist() == dentist.getId_dentist()){
+            //I catch the date of the appointment
+            LocalDate date = appo.getDate();
 
-                    //I catch the date of the appointment
-                    LocalDate date = appo.getDate();
-                    if ( date.equals(choosenDate)){
-
-                        for (LocalTime slot : hours){
-                            //If the start time of the appointment == the current slot -> remove this slot of the list of hours
-                            if (appo.getStartTime().equals(slot) ){
-                                removeHours.add(slot);
-                            }
-                        }
+            if( date.equals(choosenDate)){
+                for (LocalTime slot : hours){
+                    //If the start time of the appointment == the current slot -> remove this slot of the list of hours
+                    if (appo.getStartTime().equals(slot) ){
+                        removeHours.add(slot);
                     }
                 }
             }
-
-            hours.removeAll(removeHours);
         }
-        else{
-            return hours;
-        }
+        hours.removeAll(removeHours);
         return hours;
     }
 

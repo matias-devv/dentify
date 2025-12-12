@@ -14,4 +14,7 @@ public class DentistDTO {
     private String dni;
     private String specialty;
 
+    //the relations
+    private List<ScheduleDTO> schedules;
+    private List<AppointmentDTO> appointments;
 }

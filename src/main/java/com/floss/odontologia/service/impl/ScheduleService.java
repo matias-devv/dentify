@@ -57,6 +57,7 @@ public class ScheduleService implements IScheduleService {
         dto.setStart_time(schedule.getStartTime());
         dto.setEnd_time(schedule.getEndTime());
         dto.setId_dentist(schedule.getDentist().getId_dentist());
+        dto.setDay_week(schedule.getDayWeek());
         dto.setName_dentist(schedule.getDentist().getName());
         dto.setActive(schedule.isActive());
         return dto;

@@ -1,6 +1,7 @@
 package com.floss.odontologia.service.interfaces;
 
 import com.floss.odontologia.dto.response.AppointmentDTO;
+import com.floss.odontologia.dto.response.DentistDTO;
 import com.floss.odontologia.model.Appointment;
 import com.floss.odontologia.model.Dentist;
 
@@ -20,7 +21,7 @@ public interface IAppointmentService {
 
     public int getAppointmentNumberToday(Dentist dentist);
 
-    public List<LocalTime> getHoursOfDentist(LocalDate date, Dentist dentist, String SelectedDay);
+    public List<LocalTime> getHoursOfDentist(LocalDate date, Long id_dentist, String SelectedDay);
 
     public List<LocalTime> checkAppointments (LocalDate date, Dentist dentist, List<LocalTime> hours);
 

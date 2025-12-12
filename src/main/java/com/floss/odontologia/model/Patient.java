@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -19,9 +20,9 @@ public class Patient {
     private String surname;
     private String dni;
     private String age;
-    private LocalTime date_of_birth;
+    private LocalDate date_of_birth;
     private Boolean insurance;
-    private String patient_condition; // condition -> reserved word for sql
+    private String patient_condition; // if I use only the word "condition" -> error because is a reserved word for SQL
     private Boolean routine;
     private String treatment_type;
 

@@ -1,6 +1,7 @@
 package com.floss.odontologia.controller;
 
 import com.floss.odontologia.dto.response.AppointmentDTO;
+import com.floss.odontologia.dto.response.DentistDTO;
 import com.floss.odontologia.model.Appointment;
 import com.floss.odontologia.model.Dentist;
 import com.floss.odontologia.service.interfaces.IAppointmentService;
@@ -49,13 +50,16 @@ public class AppointmentController {
         return iAppointmentService.getAppointmentNumberToday(dentist);
     }
 
-    @GetMapping("/hours/{date}/{selectedDay}")
-    //posiblemente deba mejorarlo con Dtos.
-    public List<LocalTime> getHoursOfDentist(
-                                             @PathVariable LocalDate date,
-                                             @RequestBody Dentist dentist,
-                                             @PathVariable String selectedDay){
-        return iAppointmentService.getHoursOfDentist(date, dentist, selectedDay);
+    @GetMapping("/hours/{date}/{id_dentist}/{selectedDay}")
+    public ResponseEntity<?> getHoursOfDentist(
+                                                 @PathVariable LocalDate date,
+                                                 @PathVariable  Long id_dentist,
+                                                 @PathVariable String selectedDay){
+        List<LocalTime> hours = iAppointmentService.getHoursOfDentist(date, id_dentist, selectedDay);
+        if( hours != null ){
+            return ResponseEntity.status(200).body(hours);
+        }
+        return ResponseEntity.status(404).body("The dentist has no free time");
     }
 
     @PutMapping("/edit")

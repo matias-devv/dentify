@@ -16,7 +16,6 @@ public class Appointment {
 
     private LocalDate date;
     private LocalTime startTime;
-    private LocalTime endTime;
 
     @ManyToOne
     @JoinColumn(name="id_dentist")
