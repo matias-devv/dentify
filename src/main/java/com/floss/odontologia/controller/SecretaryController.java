@@ -12,11 +12,6 @@ public class SecretaryController {
     @Autowired
     private ISecretaryService iSecretaryService;
 
-    @PostMapping("/create")
-    public String createSecretary(@RequestBody Secretary secretary) {
-        return iSecretaryService.createSecretary(secretary);
-    }
-
     @PutMapping("/edit")
     public String editSecretary(@RequestBody Secretary secretary) {
         return iSecretaryService.editSecretary(secretary);
