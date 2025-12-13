@@ -34,10 +34,10 @@ public class ScheduleController {
     }
 
 
-    @GetMapping("/find-all/{id}")
-    public ResponseEntity<?> getAllDentistSchedules(@PathVariable Long id){
+    @GetMapping("/find-all/{id_dentist}")
+    public ResponseEntity<?> getAllDentistSchedules(@PathVariable Long id_dentist){
 
-        List<ScheduleDTO> schedules = iScheduleService.getAllDentistSchedules(id);
+        List<ScheduleDTO> schedules = iScheduleService.getAllDentistSchedules(id_dentist);
         if (schedules != null){
             return ResponseEntity.status(200).body(schedules);
         }

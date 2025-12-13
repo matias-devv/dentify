@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ScheduleService implements IScheduleService {
@@ -34,9 +35,11 @@ public class ScheduleService implements IScheduleService {
         List<ScheduleDTO> scheduleDTOs = new ArrayList<>();
 
         for (Schedule schedule : list) {
-            if (schedule.getDentist().getId_dentist() == id) {
+
+            if ( Objects.equals(schedule.getDentist().getId_dentist(), id)) {
                 //for each entity -> dto
                 ScheduleDTO scheduleDTO = this.setAttributesDto(schedule);
+
                 //dto -> list
                 scheduleDTOs.add(scheduleDTO);
             }
