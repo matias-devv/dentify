@@ -21,7 +21,7 @@ public class PatientController {
         return iPatientService.createPatient(patient);
     }
 
-    @GetMapping("/find/{id}")
+    @GetMapping("/find/{dni}")
     public ResponseEntity<?> findPatient(@PathVariable String dni){
 
         PatientDTO dto = iPatientService.getPatient(dni);
