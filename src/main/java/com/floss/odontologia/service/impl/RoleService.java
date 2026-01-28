@@ -2,7 +2,7 @@ package com.floss.odontologia.service.impl;
 
 import com.floss.odontologia.dto.response.RoleDTO;
 import com.floss.odontologia.model.Role;
-import com.floss.odontologia.model.User;
+import com.floss.odontologia.model.AuthUser;
 import com.floss.odontologia.repository.IRoleRepository;
 import com.floss.odontologia.repository.IUserRepository;
 import com.floss.odontologia.service.interfaces.IRoleService;
@@ -25,11 +25,11 @@ public class RoleService implements IRoleService {
     public Role knowRoleByUser(String username) {
 
         //I catch the list of users and the roles
-        List<User> listUsers = iUserRepository.findAll();
+        List<AuthUser> listUsers = iUserRepository.findAll();
         List<Role> listRoles = iRoleRepository.findAll();
         Role role = new Role();
 
-        for (User usu : listUsers) {
+        for (AuthUser usu : listUsers) {
 
             if ( usu.getUsername().equals(username) ) {
 

@@ -3,9 +3,7 @@ package com.floss.odontologia.controller;
 import com.floss.odontologia.dto.response.AppointmentDTO;
 import com.floss.odontologia.dto.response.DentistDTO;
 import com.floss.odontologia.dto.response.PatientDTO;
-import com.floss.odontologia.model.Appointment;
-import com.floss.odontologia.model.Dentist;
-import com.floss.odontologia.model.Patient;
+import com.floss.odontologia.model.AppUser;
 import com.floss.odontologia.service.interfaces.IDentistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -60,7 +58,7 @@ public class DentistController {
     }
 
     @PutMapping("/edit")
-    public String editDentist(@RequestBody Dentist dentist){
+    public String editDentist(@RequestBody AppUser dentist){
         return iDentistService.editDentist(dentist);
     }
 }

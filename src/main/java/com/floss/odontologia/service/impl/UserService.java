@@ -53,10 +53,10 @@ public class UserService implements IUserService {
         Speciality speciality = iSpecialityService.getSpecialityByName(userDTO.getSpeciality());
 
         //I need to persist the user and the dentist first, then establish relations
-        User user = this.setAttributesDtoToUser(userDTO, role);
+        AuthUser user = this.setAttributesDtoToUser(userDTO, role);
         iUserRepository.save(user);
 
-        Dentist dentist = this.setAttributesDtoToDentist(userDTO, speciality);
+        AppUser dentist = this.setAttributesDtoToDentist(userDTO, speciality);
         iDentistService.createDentist(dentist);
 
         //With this I establish the relations
@@ -71,7 +71,7 @@ public class UserService implements IUserService {
         Role role = iRoleService.findRoleByName(userDTO.getRole());
 
         //I need to persist the user and the secretary first, then establish relations
-        User user = this.setAttributesDtoToUser(userDTO, role);
+        AuthUser user = this.setAttributesDtoToUser(userDTO, role);
         iUserRepository.save(user);
 
         Secretary secretary = this.setAttributesDtoToSecretary(userDTO);
@@ -85,10 +85,10 @@ public class UserService implements IUserService {
 
     private boolean avoidDuplicateUsers(UserDTO userDTO) {
 
-        List<User> listUsers = iUserRepository.findAll();
+        List<AuthUser> listUsers = iUserRepository.findAll();
 
         if (listUsers != null) {
-            for (User user : listUsers) {
+            for (AuthUser user : listUsers) {
                 //only if the username is the same -> return false
                 if ( user.getUsername().equals(userDTO.getUsername())) {
                     return false;
@@ -99,12 +99,12 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public String validateUser(User user) {
+    public String validateUser(AuthUser user) {
 
         boolean match = false;
 
         //verify if the user exist already
-        User userFound = this.getUserByUsername(user.getUsername());
+        AuthUser userFound = this.getUserByUsername(user.getUsername());
 
         if(userFound != null){
 
@@ -119,9 +119,9 @@ public class UserService implements IUserService {
 
     }
 
-    private User getUserByUsername(String username) {
-        List<User> list = iUserRepository.findAll();
-        for (User user : list) {
+    private AuthUser getUserByUsername(String username) {
+        List<AuthUser> list = iUserRepository.findAll();
+        for (AuthUser user : list) {
             if ( user.getUsername().equals(username)) {
                 return user;
             }
@@ -129,8 +129,8 @@ public class UserService implements IUserService {
         return null;
     }
 
-    private User setAttributesDtoToUser(UserDTO userDTO, Role role) {
-        User user = new User();
+    private AuthUser setAttributesDtoToUser(UserDTO userDTO, Role role) {
+        AuthUser user = new AuthUser();
         //attributes
         user.setUsername(userDTO.getUsername());
         user.setPassword( Hashed.hashPassword(userDTO.getPassword()) );
@@ -139,8 +139,8 @@ public class UserService implements IUserService {
         return user;
     }
 
-    private Dentist setAttributesDtoToDentist(UserDTO userDTO, Speciality speciality) {
-        Dentist dentist = new Dentist();
+    private AppUser setAttributesDtoToDentist(UserDTO userDTO, Speciality speciality) {
+        AppUser dentist = new AppUser();
         //attributes
         dentist.setName( userDTO.getName() );
         dentist.setSurname(userDTO.getSurname());
@@ -150,7 +150,7 @@ public class UserService implements IUserService {
         return dentist;
     }
 
-    private void UpdateUserDentist(User user, Dentist dentist) {
+    private void UpdateUserDentist(AuthUser user, AppUser dentist) {
         user.setDentist(dentist);
         dentist.setUser(user);
         //update
@@ -167,7 +167,7 @@ public class UserService implements IUserService {
         return secretary;
     }
 
-    private void UpdateUserSecretary(User user, Secretary secretary) {
+    private void UpdateUserSecretary(AuthUser user, Secretary secretary) {
         secretary.setUser(user);
         user.setSecretary(secretary);
         iSecretaryService.createSecretary(secretary);

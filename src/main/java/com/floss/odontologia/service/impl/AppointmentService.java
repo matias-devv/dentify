@@ -1,10 +1,8 @@
 package com.floss.odontologia.service.impl;
 
 import com.floss.odontologia.dto.response.AppointmentDTO;
-import com.floss.odontologia.dto.response.DentistDTO;
-import com.floss.odontologia.dto.response.ScheduleDTO;
 import com.floss.odontologia.model.Appointment;
-import com.floss.odontologia.model.Dentist;
+import com.floss.odontologia.model.AppUser;
 import com.floss.odontologia.model.Schedule;
 import com.floss.odontologia.repository.IAppointmentRepository;
 import com.floss.odontologia.repository.IDentistRepository;
@@ -56,7 +54,7 @@ public class AppointmentService implements IAppointmentService {
         int total = 0;
         LocalDate today = LocalDate.now();
         //I find the dentist
-        Dentist dentist = iDentistRepository.findById(id).orElse(null);
+        AppUser dentist = iDentistRepository.findById(id).orElse(null);
         //I'm bringing the dentist appointments
         if( dentist != null ){
 
@@ -79,7 +77,7 @@ public class AppointmentService implements IAppointmentService {
         int counter = 0;
 
         //I get the schedules of the dentist
-        Dentist dentist = iDentistRepository.findById(id_dentist).orElse(null);
+        AppUser dentist = iDentistRepository.findById(id_dentist).orElse(null);
         if ( dentist != null) {
 
             List<Schedule> schedules = dentist.getSchedulesList();
@@ -150,7 +148,7 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public List<LocalTime> checkAppointments(LocalDate choosenDate, Dentist dentist, List<LocalTime> hours) {
+    public List<LocalTime> checkAppointments(LocalDate choosenDate, AppUser dentist, List<LocalTime> hours) {
 
         List <Appointment> listAppo = dentist.getAppointmentList();
         List <LocalTime> duplicateAppointments = new ArrayList<>();

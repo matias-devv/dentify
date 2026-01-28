@@ -1,7 +1,5 @@
 package com.floss.odontologia.service.interfaces;
 
-import com.floss.odontologia.model.Secretary;
-
 public interface ISecretaryService {
 
     //create

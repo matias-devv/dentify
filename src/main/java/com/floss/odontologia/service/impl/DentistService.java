@@ -5,7 +5,7 @@ import com.floss.odontologia.dto.response.DentistDTO;
 import com.floss.odontologia.dto.response.PatientDTO;
 import com.floss.odontologia.dto.response.ScheduleDTO;
 import com.floss.odontologia.model.Appointment;
-import com.floss.odontologia.model.Dentist;
+import com.floss.odontologia.model.AppUser;
 import com.floss.odontologia.model.Schedule;
 import com.floss.odontologia.repository.IDentistRepository;
 import com.floss.odontologia.service.interfaces.IAppointmentService;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class DentistService implements IDentistService {
@@ -35,23 +34,23 @@ public class DentistService implements IDentistService {
     private IScheduleService iScheduleService;
 
     @Override
-    public void createDentist(Dentist dentist) {
+    public void createDentist(AppUser dentist) {
         iDentistRepository.save(dentist);
     }
 
     @Override
     public DentistDTO getDentistById(Long id) {
-        Dentist dentist = iDentistRepository.findById(id).orElse(null);
+        AppUser dentist = iDentistRepository.findById(id).orElse(null);
         return this.setAttributesDto(dentist);
     }
 
     @Override
     public List<DentistDTO> getAllDentists() {
 
-        List<Dentist> listDentist =  iDentistRepository.findAll();
+        List<AppUser> listDentist =  iDentistRepository.findAll();
         List<DentistDTO> listDentistDTO = new ArrayList<>();
 
-        for (Dentist dentist : listDentist) {
+        for (AppUser dentist : listDentist) {
             //for each dentist -> dto
             DentistDTO dentistDto = this.setAttributesDto(dentist);
             //dto -> list dto
@@ -117,13 +116,13 @@ public class DentistService implements IDentistService {
     }
 
     @Override
-    public String editDentist(Dentist dentist) {
+    public String editDentist(AppUser dentist) {
         iDentistRepository.save(dentist);
         return "The dentist was edited succesfully";
     }
 
     @Override
-    public DentistDTO setAttributesDto(Dentist dentist){
+    public DentistDTO setAttributesDto(AppUser dentist){
         DentistDTO dto = new DentistDTO();
         dto.setId_dentist(dentist.getId_dentist());
         dto.setName(dentist.getName());

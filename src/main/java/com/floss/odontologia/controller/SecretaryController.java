@@ -1,6 +1,5 @@
 package com.floss.odontologia.controller;
 
-import com.floss.odontologia.model.Secretary;
 import com.floss.odontologia.service.interfaces.ISecretaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

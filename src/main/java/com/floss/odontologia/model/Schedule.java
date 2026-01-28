@@ -4,26 +4,25 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity @Getter @Setter
 public class Schedule {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id_schedule;
 
-    private String dayWeek;
-    private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
-    private LocalDate date_from;
-    private LocalDate date_to;
-    private boolean active;
+    @Column( name = "duration_slot_minutes", nullable = false)
+    private Integer duration_slot_minutes;
+    private LocalTime start_time;
+    private LocalTime end_time;
 
-    @ManyToOne
-    @JoinColumn(name="id_dentist")
-    private Dentist dentist;
+    @ManyToOne ( fetch = FetchType.LAZY)
+    @JoinColumn( name = "id_agenda")
+    private Agenda agenda;
 
+    @OneToMany(mappedBy = "horario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Day> days;
 }

@@ -1,7 +1,6 @@
 package com.floss.odontologia.service.interfaces;
 
 import com.floss.odontologia.dto.response.ScheduleDTO;
-import com.floss.odontologia.model.Dentist;
 import com.floss.odontologia.model.Schedule;
 
 import java.util.List;

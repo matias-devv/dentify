@@ -1,7 +1,7 @@
 package com.floss.odontologia.controller;
 
 import com.floss.odontologia.dto.request.UserDTO;
-import com.floss.odontologia.model.User;
+import com.floss.odontologia.model.AuthUser;
 import com.floss.odontologia.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +22,7 @@ public class UserController {
     }
 
     @PostMapping("/validate")
-    public String validateUser(@RequestBody User user){
+    public String validateUser(@RequestBody AuthUser user){
         return iUserService.validateUser(user);
     }
 }
