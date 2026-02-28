@@ -1,23 +1,39 @@
 package com.dentify.domain.agenda.controller;
 
-import com.dentify.domain.agenda.dto.AgendaRequestDTO;
+import com.dentify.domain.agenda.dto.CreateAgendaRequest;
+import com.dentify.domain.agenda.dto.CreateAgendaResponse;
 import com.dentify.domain.agenda.service.IAgendaService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping ("/api/agendas")
+@RequiredArgsConstructor
 public class AgendaController {
 
     private final IAgendaService agendaService;
 
-    public AgendaController ( IAgendaService agendaService) {
-        this.agendaService = agendaService;
+    @PostMapping
+    public ResponseEntity<CreateAgendaResponse> createAgenda(@AuthenticationPrincipal UserDetails userDetails,
+                                                       @RequestBody @Valid CreateAgendaRequest request) {
+
+        CreateAgendaResponse response = agendaService.save(request, userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<String> saveAgenda(@RequestBody AgendaRequestDTO agendaRequestDTO) {
-        return ResponseEntity.ok( agendaService.save(agendaRequestDTO) );
+    @GetMapping("/{id}")
+    public ResponseEntity<List<CreateAgendaResponse>> getAgendasByDentist(@AuthenticationPrincipal UserDetails userDetails,
+                                                                          @RequestParam ( required = false) Long id) {
+
+        List<CreateAgendaResponse> response = agendaService.findAgendasByDentist(id, userDetails.getUsername());
+        return ResponseEntity.ok(response);
     }
 //
 //    @GetMapping("/user/{id_user_app}")
