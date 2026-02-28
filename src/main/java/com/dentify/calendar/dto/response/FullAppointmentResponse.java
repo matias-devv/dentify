@@ -2,6 +2,7 @@ package com.dentify.calendar.dto.response;
 
 import com.dentify.calendar.dto.PayResponse;
 import com.dentify.domain.appointment.enums.AppointmentStatus;
+import com.dentify.domain.dentist.dto.DentistResponse;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -16,7 +17,7 @@ public record FullAppointmentResponse(Long id_appointment,
                                       LocalDateTime confirmed_at,
                                       PatientResponse patient,
                                       ProductResponse product,
-                                      AppUserResponse dentist,
+                                      DentistResponse dentist,
                                       AgendaResponse agenda,
                                       TreatmentResponse treatment,
                                       List<PayResponse> pay,

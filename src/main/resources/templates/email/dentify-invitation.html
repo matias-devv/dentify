@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>Tu acceso a Dentify está listo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <!--[if mso]>
+    <style>
+        body, table, td { font-family: Arial, sans-serif !important; }
+    </style>
+    <![endif]-->
+</head>
+<body style="margin:0; padding:0; background-color:#F4F3F0; font-family:'DM Sans', Arial, sans-serif;">
+
+<!-- Wrapper -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+       style="background-color:#F4F3F0; padding: 40px 16px;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"
+                   style="max-width:600px; width:100%;">
+
+                <!-- ══════════════════════════════════════════════
+                     HEADER — Dentify brand bar
+                ══════════════════════════════════════════════ -->
+                <tr>
+                    <td style="background-color:#0A1628; padding: 28px 48px; border-radius: 12px 12px 0 0;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td>
+                                    <!-- Logo text — replace with <img> once logo path is confirmed -->
+                                    <span style="
+                      font-family:'Playfair Display', Georgia, serif;
+                      font-size: 24px;
+                      font-weight: 600;
+                      color: #FFFFFF;
+                      letter-spacing: 0.5px;">
+                      Dentify
+                    </span>
+                                    <span style="
+                      display: inline-block;
+                      margin-left: 10px;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 10px;
+                      font-weight: 400;
+                      color: #4A9EE8;
+                      letter-spacing: 2.5px;
+                      text-transform: uppercase;
+                      vertical-align: middle;">
+                      Platform
+                    </span>
+                                </td>
+                                <td align="right">
+                    <span style="
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 10px;
+                      font-weight: 400;
+                      color: #3D5A8A;
+                      letter-spacing: 2px;
+                      text-transform: uppercase;">
+                      Invitación exclusiva
+                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- ══════════════════════════════════════════════
+                     HERO — Headline + subheadline
+                ══════════════════════════════════════════════ -->
+                <tr>
+                    <td style="
+              background: linear-gradient(175deg, #0D1F3C 0%, #112448 60%, #0A1628 100%);
+              padding: 56px 48px 48px 48px;">
+
+                        <!-- Eyebrow tag -->
+                        <p style="
+                margin: 0 0 20px 0;
+                font-family:'DM Sans', Arial, sans-serif;
+                font-size: 10px;
+                font-weight: 500;
+                color: #4A9EE8;
+                letter-spacing: 3px;
+                text-transform: uppercase;">
+                            ● &nbsp;Acceso personal — <span th:text="${invitedEmail}">doctor@clinica.com</span>
+                        </p>
+
+                        <!-- Main headline -->
+                        <h1 style="
+                margin: 0 0 20px 0;
+                font-family:'Playfair Display', Georgia, serif;
+                font-size: 38px;
+                font-weight: 600;
+                line-height: 1.2;
+                color: #FFFFFF;
+                letter-spacing: -0.5px;">
+                            Su práctica merece una herramienta a su altura.
+                        </h1>
+
+                        <!-- Subheadline -->
+                        <p style="
+                margin: 0 0 36px 0;
+                font-family:'DM Sans', Arial, sans-serif;
+                font-size: 16px;
+                font-weight: 300;
+                line-height: 1.7;
+                color: #8AAFCE;">
+                            Fue seleccionado para unirse a Dentify, la plataforma de gestión clínica
+                            que devuelve el control al profesional. Sin papeles, sin llamadas para confirmar,
+                            sin finanzas a ciegas.
+                        </p>
+
+                        <!-- CTA Button -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td style="border-radius: 6px; background-color: #1A6FD4;">
+                                    <a th:href="${registrationUrl}"
+                                       href="#"
+                                       style="
+                         display: inline-block;
+                         padding: 16px 36px;
+                         font-family:'DM Sans', Arial, sans-serif;
+                         font-size: 14px;
+                         font-weight: 500;
+                         color: #FFFFFF;
+                         text-decoration: none;
+                         letter-spacing: 0.3px;
+                         border-radius: 6px;">
+                                        Activar mi cuenta &nbsp;→
+                                    </a>
+                                </td>
+                                <td style="padding-left: 20px;">
+                    <span style="
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 400;
+                      color: #3D5A8A;">
+                      Expira en 48 hs
+                    </span>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- ══════════════════════════════════════════════
+                     DIVIDER — accent line
+                ══════════════════════════════════════════════ -->
+                <tr>
+                    <td style="background-color:#0A1628; height: 2px; padding: 0;">
+                        <div style="height:2px; background: linear-gradient(90deg, #1A6FD4 0%, #0A1628 100%);"></div>
+                    </td>
+                </tr>
+
+                <!-- ══════════════════════════════════════════════
+                     PAIN POINTS — 3 value props
+                ══════════════════════════════════════════════ -->
+                <tr>
+                    <td style="background-color:#FFFFFF; padding: 52px 48px 44px 48px;">
+
+                        <p style="
+                margin: 0 0 8px 0;
+                font-family:'DM Sans', Arial, sans-serif;
+                font-size: 10px;
+                font-weight: 500;
+                color: #1A6FD4;
+                letter-spacing: 3px;
+                text-transform: uppercase;">
+                            Por qué Dentify
+                        </p>
+                        <h2 style="
+                margin: 0 0 36px 0;
+                font-family:'Playfair Display', Georgia, serif;
+                font-size: 26px;
+                font-weight: 600;
+                color: #0A1628;
+                line-height: 1.3;">
+                            Diseñado para el odontólogo que no puede perder tiempo.
+                        </h2>
+
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                               style="margin-bottom: 28px;">
+                            <tr>
+                                <td width="48" valign="top" style="padding-top: 2px;">
+                                    <div style="
+                      width: 36px; height: 36px;
+                      background-color: #EBF3FB;
+                      border-radius: 8px;
+                      text-align: center;
+                      line-height: 36px;
+                      font-size: 16px;">
+                                        📅
+                                    </div>
+                                </td>
+                                <td valign="top" style="padding-left: 16px;">
+                                    <p style="
+                      margin: 0 0 4px 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 14px;
+                      font-weight: 500;
+                      color: #0A1628;">
+                                        El 30% de sus turnos terminan en ausencia. Dentify lo corrige.
+                                    </p>
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 300;
+                      line-height: 1.6;
+                      color: #5A6A7A;">
+                                        Dentify envía recordatorios automáticos por email antes de cada turno.
+                                        Menos ausencias, más rentabilidad, sin intervención manual de su parte.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Value prop 2 -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                               style="margin-bottom: 28px;">
+                            <tr>
+                                <td width="48" valign="top" style="padding-top: 2px;">
+                                    <div style="
+                      width: 36px; height: 36px;
+                      background-color: #EBF3FB;
+                      border-radius: 8px;
+                      text-align: center;
+                      line-height: 36px;
+                      font-size: 16px;">
+                                        📋
+                                    </div>
+                                </td>
+                                <td valign="top" style="padding-left: 16px;">
+                                    <p style="
+                      margin: 0 0 4px 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 14px;
+                      font-weight: 500;
+                      color: #0A1628;">
+                                        Su historia clínica siempre disponible, nunca extraviada.
+                                    </p>
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 300;
+                      line-height: 1.6;
+                      color: #5A6A7A;">
+                                        Diagnósticos, tratamientos y evolución de cada paciente centralizados.
+                                        Sin carpetas físicas, sin hojas sueltas, sin depender de la memoria.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Value prop 3 -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td width="48" valign="top" style="padding-top: 2px;">
+                                    <div style="
+                      width: 36px; height: 36px;
+                      background-color: #EBF3FB;
+                      border-radius: 8px;
+                      text-align: center;
+                      line-height: 36px;
+                      font-size: 16px;">
+                                        💰
+                                    </div>
+                                </td>
+                                <td valign="top" style="padding-left: 16px;">
+                                    <p style="
+                      margin: 0 0 4px 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 14px;
+                      font-weight: 500;
+                      color: #0A1628;">
+                                        Cada peso cobrado, registrado. Cada pago pendiente, visible.
+                                    </p>
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 300;
+                      line-height: 1.6;
+                      color: #5A6A7A;">
+                                        Efectivo o Mercado Pago: ambos generan comprobante PDF automático.
+                                        Los pagos por MP se acreditan de forma asincrónica vía webhook.
+                                        Recordatorios de cobro antes de cada turno, sin intervención manual.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- ══════════════════════════════════════════════
+                               REGISTRATION FLOW — 4 steps
+                     ══════════════════════════════════════════════ -->
+                <tr>
+                    <td style="background-color:#F8F8F6; padding: 44px 48px; border-top: 1px solid #EAEAE6;">
+
+                        <p style="
+                margin: 0 0 8px 0;
+                font-family:'DM Sans', Arial, sans-serif;
+                font-size: 10px;
+                font-weight: 500;
+                color: #1A6FD4;
+                letter-spacing: 3px;
+                text-transform: uppercase;">
+                            Proceso de registro
+                        </p>
+                        <h2 style="
+                margin: 0 0 32px 0;
+                font-family:'Playfair Display', Georgia, serif;
+                font-size: 22px;
+                font-weight: 600;
+                color: #0A1628;
+                line-height: 1.3;">
+                            Cuatro pasos. Operativo el mismo día.
+                        </h2>
+
+                        <!-- Step 1 -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                               style="margin-bottom: 20px;">
+                            <tr>
+                                <td width="40" valign="top">
+                                    <div style="
+                      width: 28px; height: 28px;
+                      background-color: #0A1628;
+                      border-radius: 50%;
+                      text-align: center;
+                      line-height: 28px;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 500;
+                      color: #FFFFFF;">
+                                        1
+                                    </div>
+                                </td>
+                                <td valign="top" style="padding-left: 12px; padding-top: 4px;">
+                                    <p style="
+                      margin: 0 0 2px 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 500;
+                      color: #0A1628;">
+                                        Complete su perfil profesional
+                                    </p>
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 300;
+                      color: #6A7A8A;
+                      line-height: 1.5;">
+                                        Nombre, matrícula y contraseña de acceso. Solo toma un minuto.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- connector -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0"
+                               style="margin-bottom: 20px; margin-left: 13px;">
+                            <tr>
+                                <td style="border-left: 1px dashed #C8D4E0; height: 16px; width: 1px;"></td>
+                            </tr>
+                        </table>
+
+                        <!-- Step 2 -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                               style="margin-bottom: 20px;">
+                            <tr>
+                                <td width="40" valign="top">
+                                    <div style="
+                      width: 28px; height: 28px;
+                      background-color: #0A1628;
+                      border-radius: 50%;
+                      text-align: center;
+                      line-height: 28px;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 500;
+                      color: #FFFFFF;">
+                                        2
+                                    </div>
+                                </td>
+                                <td valign="top" style="padding-left: 12px; padding-top: 4px;">
+                                    <p style="
+                      margin: 0 0 2px 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 500;
+                      color: #0A1628;">
+                                        Registre los datos de su clínica
+                                    </p>
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 300;
+                      color: #6A7A8A;
+                      line-height: 1.5;">
+                                        Nombre, dirección y datos de contacto. Con esto su cuenta queda activa
+                                        y lista para ingresar.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- connector -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0"
+                               style="margin-bottom: 20px; margin-left: 13px;">
+                            <tr>
+                                <td style="border-left: 1px dashed #C8D4E0; height: 16px; width: 1px;"></td>
+                            </tr>
+                        </table>
+
+                        <!-- Step 3 -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                               style="margin-bottom: 20px;">
+                            <tr>
+                                <td width="40" valign="top">
+                                    <div style="
+                      width: 28px; height: 28px;
+                      background-color: #0A1628;
+                      border-radius: 50%;
+                      text-align: center;
+                      line-height: 28px;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 500;
+                      color: #FFFFFF;">
+                                        3
+                                    </div>
+                                </td>
+                                <td valign="top" style="padding-left: 12px; padding-top: 4px;">
+                                    <p style="
+                      margin: 0 0 2px 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 500;
+                      color: #0A1628;">
+                                        Configure su primera agenda
+                                    </p>
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 300;
+                      color: #6A7A8A;
+                      line-height: 1.5;">
+                                        Defina sus bloques horarios, duración de turnos y servicios asociados.
+                                        Una sola configuración, sin tocarla de nuevo.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- connector -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0"
+                               style="margin-bottom: 20px; margin-left: 13px;">
+                            <tr>
+                                <td style="border-left: 1px dashed #C8D4E0; height: 16px; width: 1px;"></td>
+                            </tr>
+                        </table>
+
+                        <!-- Step 4 -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td width="40" valign="top">
+                                    <div style="
+                      width: 28px; height: 28px;
+                      background-color: #1A6FD4;
+                      border-radius: 50%;
+                      text-align: center;
+                      line-height: 28px;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 500;
+                      color: #FFFFFF;">
+                                        4
+                                    </div>
+                                </td>
+                                <td valign="top" style="padding-left: 12px; padding-top: 4px;">
+                                    <p style="
+                      margin: 0 0 2px 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 500;
+                      color: #1A6FD4;">
+                                        Empiece a operar
+                                    </p>
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 300;
+                      color: #6A7A8A;
+                      line-height: 1.5;">
+                                        Asigne turnos, registre pacientes, monitoree cobros y olvídese
+                                        de las inasistencias. Desde el primer día.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- ══════════════════════════════════════════════
+                     CTA BOTTOM — reinforcement
+                ══════════════════════════════════════════════ -->
+                <tr>
+                    <td style="background-color:#FFFFFF; padding: 40px 48px; text-align: center; border-top: 1px solid #EAEAE6;">
+
+                        <p style="
+                margin: 0 0 8px 0;
+                font-family:'Playfair Display', Georgia, serif;
+                font-size: 20px;
+                font-weight: 600;
+                color: #0A1628;
+                line-height: 1.3;">
+                            Su invitación expira en 48 horas.
+                        </p>
+                        <p style="
+                margin: 0 0 28px 0;
+                font-family:'DM Sans', Arial, sans-serif;
+                font-size: 13px;
+                font-weight: 300;
+                color: #6A7A8A;">
+                            Una vez expirada, deberá solicitar una nueva al administrador de la clínica.
+                        </p>
+
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0"
+                               align="center">
+                            <tr>
+                                <td style="border-radius: 6px; background-color: #1A6FD4;">
+                                    <a th:href="${registrationUrl}"
+                                       href="#"
+                                       style="
+                         display: inline-block;
+                         padding: 16px 44px;
+                         font-family:'DM Sans', Arial, sans-serif;
+                         font-size: 14px;
+                         font-weight: 500;
+                         color: #FFFFFF;
+                         text-decoration: none;
+                         letter-spacing: 0.3px;
+                         border-radius: 6px;">
+                                        Activar mi cuenta
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="
+                margin: 20px 0 0 0;
+                font-family:'DM Sans', Arial, sans-serif;
+                font-size: 11px;
+                font-weight: 400;
+                color: #A0AABA;">
+                            O copie este enlace en su navegador:<br/>
+                            <span th:text="${registrationUrl}"
+                                  style="color: #1A6FD4;">https://dentify.app/registro?token=...</span>
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- ══════════════════════════════════════════════
+                     FOOTER
+                ══════════════════════════════════════════════ -->
+                <tr>
+                    <td style="
+              background-color:#0A1628;
+              padding: 32px 48px;
+              border-radius: 0 0 12px 12px;">
+
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td>
+                                    <p style="
+                      margin: 0 0 4px 0;
+                      font-family:'Playfair Display', Georgia, serif;
+                      font-size: 14px;
+                      font-weight: 600;
+                      color: #FFFFFF;">
+                                        Dentify
+                                    </p>
+                                    <p style="
+                      margin: 0 0 16px 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 11px;
+                      font-weight: 300;
+                      color: #3D5A8A;">
+                                        Plataforma de gestión clínica odontológica
+                                    </p>
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 11px;
+                      font-weight: 300;
+                      color: #3D5A8A;
+                      line-height: 1.7;">
+                                        Este correo fue enviado a <span th:text="${invitedEmail}" style="color:#5A7AA0;">doctor@clinica.com</span><br/>
+                                        porque fue invitado a unirse a la plataforma por el equipo de
+                                        <span th:text="${clinicName}" style="color:#5A7AA0;">Clínica</span>.<br/>
+                                        Si cree que recibió esto por error, puede ignorar este mensaje.
+                                    </p>
+                                </td>
+                                <td align="right" valign="top">
+                                    <p style="
+                      margin: 0;
+                      font-family:'DM Sans', Arial, sans-serif;
+                      font-size: 10px;
+                      font-weight: 400;
+                      color: #3D5A8A;
+                      letter-spacing: 1px;
+                      text-align: right;">
+                                        © <span th:text="${currentYear}">2025</span> Dentify.<br/>
+                                        Todos los derechos reservados.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
