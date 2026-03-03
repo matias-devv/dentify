@@ -1,4 +1,4 @@
-package com.dentify.domain.patient.dto;
+package com.dentify.domain.patient.dto.response;
 
 public record CancelledPatientResponse(
                                        String name,

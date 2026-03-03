@@ -1,4 +1,4 @@
-package com.dentify.calendar.dto.response;
+package com.dentify.domain.treatment.dto;
 
 import com.dentify.domain.treatment.enums.TreatmentStatus;
 

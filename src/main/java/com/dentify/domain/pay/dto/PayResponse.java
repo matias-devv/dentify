@@ -1,4 +1,4 @@
-package com.dentify.calendar.dto;
+package com.dentify.domain.pay.dto;
 
 import com.dentify.domain.pay.enums.PaymentMethod;
 import com.dentify.domain.pay.enums.PaymentStatus;

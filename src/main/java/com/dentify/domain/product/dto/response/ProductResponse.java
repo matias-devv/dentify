@@ -1,4 +1,4 @@
-package com.dentify.calendar.dto.response;
+package com.dentify.domain.product.dto.response;
 
 import java.math.BigDecimal;
 

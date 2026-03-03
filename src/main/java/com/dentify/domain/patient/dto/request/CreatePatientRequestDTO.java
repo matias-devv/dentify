@@ -1,4 +1,4 @@
-package com.dentify.domain.patient.dto;
+package com.dentify.domain.patient.dto.request;
 
 import com.dentify.domain.responsibleadult.dto.ResponsibleAdultDTO;
 import com.dentify.domain.patient.enums.CoverageType;
