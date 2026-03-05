@@ -1,7 +1,6 @@
 package com.dentify.security.seeder;
 
 import com.dentify.security.model.Permission;
-import com.dentify.security.model.Role;
 import com.dentify.security.service.IPermissionService;
 import com.dentify.security.service.IRoleService;
 import jakarta.transaction.Transactional;
@@ -18,7 +17,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 @Order(1)
-public class RolesAndPermissionsSeeder implements ApplicationRunner {
+public class RolesPermissionsSeeder implements ApplicationRunner {
 
     private final IRoleService roleService;
     private final IPermissionService permissionService;
