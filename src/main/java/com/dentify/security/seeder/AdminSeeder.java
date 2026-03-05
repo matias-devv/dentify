@@ -1,34 +1,37 @@
-package com.dentify.domain.userProfile.service;
+package com.dentify.security.seeder;
 
 import com.dentify.security.service.IAuthUserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-@Profile("dev | prod")  // solo corre en producción, no en tests
+@Profile("!test")
 @Component
 @RequiredArgsConstructor
+@Slf4j
+@Order(2)
 public class AdminSeeder implements ApplicationRunner {
 
     private final IAuthUserService authUserService;
 
-    @Value()
+    @Value("${platform.admin.email}")
+    private String adminEmail;
 
-    @Value()
+    @Value("${platform.admin.password}")
+    private String adminPassword;
 
     @Override
     public void run(ApplicationArguments args) {
 
-        // El if es el "una sola vez" — si ya existe, no hace nada
-        if ( !authUserService.existsByUsername("admin@dentify.com") ){
 
-            authUserService.createPlatformAdmin(
-                    "admin@dentify.com",
-                    System.getenv("ADMIN_PASSWORD")  // viene de variable de entorno, nunca hardcodeada
-            );
+        if ( !authUserService.existsByUsername(adminEmail) ){
+
+            authUserService.createPlatformAdmin( adminEmail, adminPassword);
 
             log.info("Platform admin created");
         }
