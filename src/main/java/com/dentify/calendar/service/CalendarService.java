@@ -3,7 +3,6 @@ package com.dentify.calendar.service;
 import com.dentify.calendar.dto.request.day.DetailedDayRequest;
 import com.dentify.calendar.dto.request.month.MonthRequest;
 import com.dentify.calendar.dto.request.week.WeekRequest;
-import com.dentify.calendar.dto.response.*;
 import com.dentify.calendar.dto.response.day.DetailedDayResponse;
 import com.dentify.calendar.dto.response.day.DetailedSlotResponse;
 import com.dentify.calendar.dto.response.month.DailySummaryResponse;
@@ -17,15 +16,13 @@ import com.dentify.domain.agenda.service.IAgendaService;
 import com.dentify.domain.appointment.model.Appointment;
 import com.dentify.domain.appointment.service.IAppointmentService;
 import com.dentify.domain.schedule.model.Schedule;
-import com.dentify.domain.schedule.service.IScheduleService;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotBlank;
+import com.dentify.mapper.AppointmentMapper;
+import com.dentify.mapper.CalendarMapper;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
-import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -36,31 +33,34 @@ public class CalendarService implements ICalendarService{
     private final IAgendaService agendaService;
     private final IAppointmentService appointmentService;
 
+    //mappers
+    private final AppointmentMapper appointmentMapper;
+    private final CalendarMapper calendarMapper;
+
     @Override
     public MonthResponse getMonthlySummary(MonthRequest request) {
 
         List<DailySummaryResponse> days = new ArrayList<>();
 
-        Optional<Agenda> agenda = agendaService.findAgendaWithSchedules( request.id_agenda() );
+        Agenda agenda = agendaService.findAgendaWithSchedules( request.id_agenda() );
 
-        agendaService.validateIfTheAgendaExists(agenda);
-        agendaService.validateIfAgendaIsActive(agenda.get());
+        agendaService.validateIfAgendaIsActive(agenda);
 
         YearMonth yearMonth = YearMonth.of( request.year(), Month.of( request.month_number() ) );
 
-        LocalDate firstDate = yearMonth.atDay(1);
-        LocalDate finalDate = yearMonth.atEndOfMonth();
+        LocalDateTime start = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime end = yearMonth.atEndOfMonth().atStartOfDay();
 
-        agendaService.validateDateRangeInAgenda( agenda.get(), firstDate, finalDate);
+        agendaService.validateDateRangeInAgenda( agenda, start.toLocalDate(), end.toLocalDate() );
 
-        List< Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDateRange( agenda.get().getId_agenda(), firstDate, finalDate);
+        List< Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDateRange( agenda.getId_agenda(), start, end);
 
         Map< LocalDateTime, Appointment> mapAppointments = appointmentService.fillInAppointmentMap( appointments );
 
-        Map< DayOfWeek, List<Schedule> > mapDays = agenda.get().fillMapDays();
+        Map< DayOfWeek, List<Schedule> > mapDays = agenda.fillMapDays();
 
         //Add 1 day so that it does not exclude the last day
-        List<LocalDate> dates = firstDate.datesUntil( finalDate.plusDays(1) ).toList();
+        List<LocalDate> dates = start.toLocalDate().datesUntil( end.toLocalDate().plusDays(1) ).toList();
 
         for( LocalDate date : dates ) {
 
@@ -68,15 +68,14 @@ public class CalendarService implements ICalendarService{
 
             List<Schedule> schedulesForDay = mapDays.get(dayOfWeek);
 
-            DailySummaryResponse response = (schedulesForDay != null)
-                            ? buildDailySummaryForMultipleSchedules(date, schedulesForDay, mapAppointments)
-                            : buildNonWorkingDay(date);
+            DailySummaryResponse response = (schedulesForDay != null) ? buildDailySummaryForMultipleSchedules(date, schedulesForDay, mapAppointments)
+                                                                      : buildNonWorkingDay(date);
 
 
             days.add(response);
         }
 
-        return this.buildMonthResponse( agenda.get(), yearMonth, days);
+        return calendarMapper.buildMonthResponse( agenda, yearMonth, days);
     }
 
     private DailySummaryResponse buildDailySummaryForMultipleSchedules(LocalDate date, List<Schedule> schedulesForDay,
@@ -135,37 +134,25 @@ public class CalendarService implements ICalendarService{
         return AvailabilityState.AVAILABLE;
     }
 
-    private MonthResponse buildMonthResponse( Agenda agenda, YearMonth yearMonth, List<DailySummaryResponse> days) {
-        return new MonthResponse(agenda.getId_agenda(),
-                                 yearMonth.getYear(),
-                                 yearMonth.getMonth().getValue(),
-                                 yearMonth.getMonth().getDisplayName(TextStyle.FULL, new Locale("es")),
-                                 agenda.getProduct().getName_product(),
-                                 agenda.getDuration_minutes(),
-                                 days);
-    }
-
     @Override
     public @Nullable WeekResponse getWeeklySlots(WeekRequest request) {
 
         List<DayResponse> dayResponses = new ArrayList<>();
 
-        Optional<Agenda> agenda = agendaService.findAgendaWithSchedules( request.id_agenda() );
+        Agenda agenda = agendaService.findAgendaWithSchedules( request.id_agenda() );
 
-        if ( agenda.isEmpty() ) {
-            throw new RuntimeException("The agenda was not found");
-        }
+        agendaService.validateDateRangeInAgenda( agenda, request.startDate(), request.endDate());
 
-        agendaService.validateDateRangeInAgenda( agenda.get(), request.startDate(), request.endDate());
-
-        List<Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDateRange( agenda.get().getId_agenda(), request.startDate(), request.endDate());
+        List<Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDateRange( agenda.getId_agenda(),
+                                                                                                  request.startDate().atStartOfDay(),
+                                                                                                  request.endDate().atStartOfDay() );
 
         Map<LocalDateTime, Appointment> mapAppointments = appointmentService.fillInAppointmentMap( appointments );
 
         //Add 1 day so that it does not exclude the last day
         List<LocalDate> dates = request.startDate().datesUntil( request.endDate().plusDays(1) ).toList();
 
-        Map< DayOfWeek, List<Schedule> > mapDays = agenda.get().fillMapDays();
+        Map< DayOfWeek, List<Schedule> > mapDays = agenda.fillMapDays();
 
         for( LocalDate date : dates ) {
 
@@ -183,7 +170,7 @@ public class CalendarService implements ICalendarService{
             }
         }
 
-        return this.buildWeekResponse( agenda.get(), dayResponses);
+        return calendarMapper.buildWeekResponse( agenda, dayResponses);
     }
 
     private DayResponse buildDayResponseListForMultipleSchedules( LocalDate date, List<Schedule> schedulesForDay,
@@ -218,14 +205,6 @@ public class CalendarService implements ICalendarService{
     }
 
 
-    private WeekResponse buildWeekResponse(Agenda agenda, List<DayResponse> dayResponses) {
-        return new WeekResponse(agenda.getId_agenda(),
-                                agenda.getAgenda_name(),
-                                agenda.getStart_date(),
-                                agenda.getFinal_date(),
-                                dayResponses);
-    }
-
     private List<SlotResponse> calculateSlotsResponsesListForThisSchedule( LocalDate date, Schedule schedule, Map<LocalDateTime, Appointment> mapAppointments) {
 
         List<SlotResponse> slots = new ArrayList<>();
@@ -246,7 +225,7 @@ public class CalendarService implements ICalendarService{
             Appointment appointment = mapAppointments.get(key);
 
             SlotResponse slot = (appointment != null)
-                    ? new SlotResponse(currentTime, slotEnd, false, buildAppointmentResponse(appointment) )
+                    ? new SlotResponse(currentTime, slotEnd, false, appointmentMapper.buildAppointmentResponse(appointment) )
                     : new SlotResponse(currentTime, slotEnd, true, null );
 
             currentTime = slotEnd; //I advance to the next slot
@@ -256,34 +235,22 @@ public class CalendarService implements ICalendarService{
         return slots;
     }
 
-    private AppointmentResponse buildAppointmentResponse(Appointment appointment) {
-        return new AppointmentResponse( appointment.getId_appointment(),
-                                        appointment.getPatient().getName(),
-                                        appointment.getPatient().getSurname(),
-                                        appointment.getAppointmentStatus(),
-                                        appointment.getTreatment().getProduct().getName_product() );
-    }
-
     @Override
     public DetailedDayResponse getDailySlots(DetailedDayRequest request) {
 
         List<DetailedSlotResponse> slots = new ArrayList<>();
 
-        Optional<Agenda> agenda = agendaService.findAgendaWithSchedules( request.id_agenda() );
+        Agenda agenda = agendaService.findAgendaWithSchedules( request.id_agenda() );
 
-        if ( agenda.isEmpty() ) {
-            throw new RuntimeException("The agenda was not found");
-        }
+        agendaService.validateDateWithinAgendaRange( agenda, request.startDate());
 
-        agendaService.validateDateWithinAgendaRange( agenda.get(), request.startDate());
-
-        List<Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDate( agenda.get().getId_agenda(), request.startDate() );
+        List<Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDate( agenda.getId_agenda(), request.startDate());
 
         Map<LocalDateTime, Appointment> mapAppointments = appointmentService.fillInAppointmentMap( appointments );
 
         DayOfWeek dayOfWeek =  request.startDate().getDayOfWeek();
 
-        Map< DayOfWeek, List<Schedule> > mapDays = agenda.get().fillMapDays();
+        Map< DayOfWeek, List<Schedule> > mapDays = agenda.fillMapDays();
 
         List<Schedule> schedulesForDay = mapDays.get(dayOfWeek);
 
@@ -302,10 +269,10 @@ public class CalendarService implements ICalendarService{
             Integer ocuppiedSlots = this.countOcuppiedSlots(slots);
             Integer totalSlots = freeSlots + ocuppiedSlots;
 
-            return this.buildDetailedDayResponse( agenda.get(), slots, request.startDate(), totalSlots, freeSlots, ocuppiedSlots, null);
+            return calendarMapper.buildDetailedDayResponse( agenda, slots, request.startDate(), totalSlots, freeSlots, ocuppiedSlots, null);
         }
         else{
-            return this.buildDetailedDayResponse(agenda.get(), slots, request.startDate(), 0, 0, 0, "The day has no scheduled times");
+            return calendarMapper.buildDetailedDayResponse( agenda, slots, request.startDate(), 0, 0, 0, "The day has no scheduled times");
         }
     }
 
@@ -330,7 +297,7 @@ public class CalendarService implements ICalendarService{
             Appointment appointment = mapAppointments.get(key);
 
             DetailedSlotResponse slot = (appointment != null)
-                    ? new DetailedSlotResponse(currentTime, slotEnd, false, buildDetailedAppointmentResponse(appointment) )
+                    ? new DetailedSlotResponse(currentTime, slotEnd, false, appointmentMapper.buildDetailedAppointmentResponse(appointment) )
                     : new DetailedSlotResponse(currentTime, slotEnd, true, null );
 
             currentTime = slotEnd; //I advance to the next slot
@@ -361,31 +328,5 @@ public class CalendarService implements ICalendarService{
         }
         return occupiedSlots;
     }
-
-    private DetailedAppointmentResponse buildDetailedAppointmentResponse(Appointment appointment) {
-        return new DetailedAppointmentResponse(appointment.getId_appointment(),
-                                               appointment.getPatient().getName(),
-                                               appointment.getPatient().getSurname(),
-                                               appointment.getPatient().getPhone_number(),
-                                               appointment.getAppointmentStatus(),
-                                               appointment.getTreatment().getProduct().getName_product(),
-                                               appointment.getNotes() );
-    }
-
-    private DetailedDayResponse buildDetailedDayResponse(Agenda agenda, List<DetailedSlotResponse> slots, LocalDate requestedDate,
-                                                         Integer totalSlots, Integer freeSlots, Integer occupiedSlots, String message) {
-        return new DetailedDayResponse(agenda.getId_agenda(),
-                                       agenda.getProduct().getId_product(),
-                                       requestedDate,
-                                       requestedDate.getDayOfWeek(),
-                                       agenda.getDuration_minutes(),
-                                       agenda.getProduct().getName_product(),
-                                       totalSlots,
-                                       freeSlots,
-                                       occupiedSlots,
-                                       slots ,
-                                       message );
-    }
-
 
 }
