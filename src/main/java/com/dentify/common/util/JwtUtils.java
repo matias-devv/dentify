@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +25,7 @@ public class JwtUtils {
     @Value("${security.jwt.user.generator}")
     private String userGenerator;
 
-    public String createToken( Authentication authentication) {
+    public String createToken( Authentication authentication, String tenantId) {
 
         Algorithm algorithm = Algorithm.HMAC256( this.privateKey );
 
@@ -40,6 +39,7 @@ public class JwtUtils {
                 .withIssuer(this.userGenerator)
                 .withSubject(username)
                 .withClaim("authorities", authorities)
+                .withClaim("tenantId", tenantId)
                 .withIssuedAt( new Date())
                 .withExpiresAt( new Date(System.currentTimeMillis() + 1800000))
                 .withJWTId(UUID.randomUUID().toString())
