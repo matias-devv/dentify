@@ -1,6 +1,6 @@
 package com.dentify.calendar.dto.response.day;
 
-import com.dentify.calendar.dto.response.DetailedAppointmentResponse;
+import com.dentify.domain.appointment.dto.response.DetailedAppointmentResponse;
 
 import java.time.LocalTime;
 

@@ -31,20 +31,21 @@ public class JwtUtils {
 
         String username = authentication.getPrincipal().toString();
 
-        String authorities = authentication.getAuthorities().stream()
-                                                            .map(GrantedAuthority::getAuthority)
-                                                            .collect(Collectors.joining());
+        String authorities = authentication.getAuthorities()
+                                            .stream()
+                                            .map(GrantedAuthority::getAuthority)
+                                            .collect(Collectors.joining(","));
 
         String jwtToken = JWT.create()
-                .withIssuer(this.userGenerator)
-                .withSubject(username)
-                .withClaim("authorities", authorities)
-                .withClaim("tenantId", tenantId)
-                .withIssuedAt( new Date())
-                .withExpiresAt( new Date(System.currentTimeMillis() + 1800000))
-                .withJWTId(UUID.randomUUID().toString())
-                .withNotBefore( new Date(System.currentTimeMillis()))
-                .sign(algorithm);
+                            .withIssuer(this.userGenerator)
+                            .withSubject(username)
+                            .withClaim("authorities", authorities)
+                            .withClaim("tenantId", tenantId)
+                            .withIssuedAt( new Date())
+                            .withExpiresAt( new Date(System.currentTimeMillis() + 1500000)) //25m
+                            .withJWTId(UUID.randomUUID().toString())
+                            .withNotBefore( new Date(System.currentTimeMillis()))
+                            .sign(algorithm);
 
         return jwtToken;
     }
@@ -55,8 +56,8 @@ public class JwtUtils {
             Algorithm algorithm = Algorithm.HMAC256( this.privateKey );
 
             JWTVerifier verifier = JWT.require( algorithm )
-                    .withIssuer(this.userGenerator)
-                    .build();
+                                      .withIssuer(this.userGenerator)
+                                      .build();
 
             DecodedJWT decodedJWT = verifier.verify(token);
 

@@ -1,7 +1,7 @@
 package com.dentify.calendar.dto.response.week;
 
 
-import com.dentify.calendar.dto.response.AppointmentResponse;
+import com.dentify.domain.appointment.dto.response.AppointmentResponse;
 
 import java.time.LocalTime;
 
