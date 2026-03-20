@@ -1,4 +1,4 @@
-package com.dentify.domain.pay.dto;
+package com.dentify.domain.pay.dto.response;
 
 import com.dentify.domain.pay.enums.PaymentMethod;
 import com.dentify.domain.pay.enums.PaymentStatus;
