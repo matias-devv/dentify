@@ -1,128 +1,264 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Comprobante de Pago - Confirmación</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title th:text="'Comprobante de Pago — ' + ${clinicName}">Comprobante de Pago</title>
+    <!--[if mso]>
+    <noscript><xml><o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings></xml></noscript>
+    <![endif]-->
+    <style type="text/css">
+        /* CLIENT RESETS */
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+        img { border: 0; line-height: 100%; outline: none; text-decoration: none; }
+
+        /* MOBILE */
+        @media only screen and (max-width: 600px) {
+            .wrapper   { padding: 0 !important; }
+            .container { width: 100% !important; border-radius: 0 !important; }
+            .padded    { padding: 24px 20px !important; }
+            .header    { padding: 26px 20px !important; }
+            .footer    { padding: 20px !important; }
+            .amount    { font-size: 34px !important; }
+            .col-r     { display: block !important; width: 100% !important;
+                         text-align: left !important; padding-top: 16px !important; }
+            .hide-sm   { display: none !important; max-height: 0 !important; overflow: hidden !important; }
+        }
+    </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
+<body style="margin:0;padding:0;background-color:#EDEEF2;
+             font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
 
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+<!-- Preheader -->
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;"
+     th:text="'Comprobante de pago · ' + ${clinicName} + ' · ' + ${appointmentDate}">
+    Comprobante de pago
+</div>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+</div>
 
-    <!-- Header -->
-    <tr>
-        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-            <table width="100%">
-                <tr>
-                    <td style="padding: 0 20px;">
-                        <div style="background: white; width: 64px; height: 64px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
-                            <svg style="width: 32px; height: 32px; color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <h1 style="color: white; margin: 20px 0 10px 0; font-size: 28px; font-weight: 600;">Pago Confirmado</h1>
-                        <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 16px;">Comprobante de pago generado automáticamente</p>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
+<!-- OUTER WRAPPER -->
+<table role="presentation" class="wrapper" width="100%" border="0" cellpadding="0" cellspacing="0"
+       bgcolor="#EDEEF2">
+    <tr><td align="center" style="padding:36px 16px;">
 
-    <!-- Patient Info -->
-    <tr>
-        <td style="padding: 32px 30px 20px 30px;">
-            <p style="margin: 0 0 16px 0; color: #4b5563; font-size: 16px;">
-                Hola <strong style="color: #1f2937;" th:text="${patientName}">Paciente</strong>,
-            </p>
-            <p style="margin: 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                Hemos recibido tu pago correctamente. Tu turno está confirmado y te esperamos en la fecha acordada.
-            </p>
-        </td>
-    </tr>
+        <!-- CARD -->
+        <table role="presentation" class="container" width="560" border="0" cellpadding="0" cellspacing="0"
+               style="background-color:#ffffff;border-radius:4px;
+                  border:1px solid #D5D9E0;overflow:hidden;">
 
-    <!-- Payment Details Card -->
-    <tr>
-        <td style="padding: 0 30px 20px 30px;">
-            <div style="background: #f8fafc; border-radius: 8px; padding: 24px; border-left: 4px solid #10b981;">
-                <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Detalles del Pago</h3>
+            <!-- ╔══ HEADER ══╗ -->
+            <tr>
+                <td class="header"
+                    style="background-color:#162040;
+                       background-image:linear-gradient(180deg,#1e2f52 0%,#111829 100%);
+                       padding:30px 36px;">
+                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="vertical-align:middle;">
+                                <p style="margin:0 0 3px 0;font-size:10px;letter-spacing:3px;
+                                   text-transform:uppercase;color:#6B87B0;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                    Comprobante de Pago
+                                </p>
+                                <h1 style="margin:0;font-size:19px;font-weight:400;color:#FFFFFF;
+                                    letter-spacing:0.2px;
+                                    font-family:Georgia,'Times New Roman',serif;"
+                                    th:text="${clinicName}">Nombre de la Clínica</h1>
+                            </td>
+                            <td align="right" style="vertical-align:middle;" class="hide-sm">
+                        <span style="display:inline-block;background-color:#0F3D24;
+                                      color:#5FD68A;font-size:10px;font-weight:700;
+                                      letter-spacing:1.8px;padding:5px 13px;
+                                      border-radius:2px;text-transform:uppercase;
+                                      font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                            ✓ Aprobado
+                        </span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
 
-                <table width="100%" cellpadding="8" cellspacing="0">
-                    <tr>
-                        <td width="40%" style="color: #6b7280; font-size: 14px; padding: 8px 0;">Comprobante N°</td>
-                        <td style="color: #1f2937; font-weight: 500; font-size: 14px; padding: 8px 0;" th:text="${receiptNumber}">12345</td>
-                    </tr>
-                    <tr>
-                        <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Monto</td>
-                        <td style="color: #1f2937; font-weight: 600; font-size: 16px; padding: 8px 0;">
-                            $<span th:text="${amount}">5000</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Método de pago</td>
-                        <td style="color: #1f2937; font-weight: 500; font-size: 14px; padding: 8px 0;" th:text="${paymentMethod}">Efectivo</td>
-                    </tr>
-                    <tr>
-                        <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Fecha de pago</td>
-                        <td style="color: #1f2937; font-weight: 500; font-size: 14px; padding: 8px 0;" th:text="${paymentDate}">01/02/2025 14:30</td>
-                    </tr>
+            <!-- ╔══ AMOUNT BAR ══╗ -->
+            <tr>
+                <td style="background-color:#F6F8FB;border-bottom:1px solid #D5D9E0;padding:26px 36px;"
+                    class="padded">
+                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <!-- Amount -->
+                            <td style="vertical-align:bottom;">
+                                <p style="margin:0 0 5px 0;font-size:10px;letter-spacing:2.5px;
+                                   text-transform:uppercase;color:#8E99AB;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                    Monto Abonado
+                                </p>
+                                <p class="amount"
+                                   style="margin:0;font-size:40px;font-weight:700;color:#162040;
+                                   letter-spacing:-1.5px;line-height:1;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                   th:text="${paymentAmount}">$0.00</p>
+                                <p style="margin:7px 0 0 0;font-size:11px;color:#8E99AB;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                    Efectivo &nbsp;·&nbsp; <span th:text="${paymentStatus}">Aprobado</span>
+                                </p>
+                            </td>
+                            <!-- Receipt number -->
+                            <td class="col-r" align="right" style="vertical-align:bottom;padding-left:20px;">
+                                <p style="margin:0 0 4px 0;font-size:10px;letter-spacing:2px;
+                                   text-transform:uppercase;color:#8E99AB;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                    N° Comprobante
+                                </p>
+                                <p style="margin:0;font-size:14px;font-weight:700;color:#162040;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                   th:text="${receiptNumber}">COMP-000001</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
 
-                    <tr th:if="${paymentId != null}">
-                        <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">ID Transacción</td>
-                        <td style="color: #1f2937; font-weight: 500; font-size: 14px; padding: 8px 0;" th:text="${paymentId}">123456789</td>
-                    </tr>
-
-                    <tr th:if="${installments != null and installments > 1}">
-                        <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Cuotas</td>
-                        <td style="color: #1f2937; font-weight: 500; font-size: 14px; padding: 8px 0;" th:text="${installments}">3</td>
-                    </tr>
-                </table>
-            </div>
-        </td>
-    </tr>
-
-    <!-- Appointment Details -->
-    <tr>
-        <td style="padding: 0 30px 30px 30px;">
-            <div style="background: #fef3c7; border-radius: 8px; padding: 24px;">
-                <h3 style="margin: 0 0 16px 0; color: #92400e; font-size: 18px; font-weight: 600;">📅 Información del Turno</h3>
-
-                <table width="100%" cellpadding="8" cellspacing="0">
-                    <tr>
-                        <td width="40%" style="color: #92400e; font-size: 14px; padding: 8px 0;">Fecha</td>
-                        <td style="color: #92400e; font-weight: 600; font-size: 14px; padding: 8px 0;" th:text="${appointmentDate}">15/02/2025</td>
-                    </tr>
-                    <tr>
-                        <td style="color: #92400e; font-size: 14px; padding: 8px 0;">Hora</td>
-                        <td style="color: #92400e; font-weight: 600; font-size: 14px; padding: 8px 0;" th:text="${appointmentTime}">10:00</td>
-                    </tr>
-                </table>
-
-                <div style="background: #fde68a; border-radius: 6px; padding: 12px; margin-top: 16px;">
-                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.5;">
-                        ⏰ Por favor, llega 10 minutos antes de tu horario asignado.
+            <!-- ╔══ APPOINTMENT DETAIL ══╗ -->
+            <tr>
+                <td class="padded" style="padding:28px 36px 20px 36px;">
+                    <!-- Section heading -->
+                    <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:2.5px;
+                           text-transform:uppercase;color:#8E99AB;
+                           border-bottom:1px solid #EAEDF1;padding-bottom:12px;
+                           font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                        Detalle del Turno
                     </p>
-                </div>
-            </div>
-        </td>
-    </tr>
 
-    <!-- Footer -->
-    <tr>
-        <td style="background: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-            <p style="margin: 0 0 16px 0; color: #6b7280; font-size: 14px; line-height: 1.5;">
-                Este comprobante es válido como constancia de pago.<br>
-                Presentalo al momento de tu consulta si es requerido.
-            </p>
+                    <!-- Detail rows -->
+                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
 
-            <div style="background: #e5e7eb; height: 1px; margin: 20px 0;"></div>
+                        <tr>
+                            <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;width:42%;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                Paciente
+                            </td>
+                            <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;text-align:right;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                th:text="${patientName}">Nombre Apellido</td>
+                        </tr>
 
-            <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 1.5;">
-                Este es un correo automático. Por favor no respondas a este mensaje.<br>
-                <span style="color: #6b7280;">© 2024 Centro Médico. Todos los derechos reservados.</span>
-            </p>
-        </td>
-    </tr>
+                        <tr>
+                            <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                Profesional
+                            </td>
+                            <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;text-align:right;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                th:text="'Dr/a. ' + ${dentistName}">Dr/a. Nombre</td>
+                        </tr>
 
+                        <tr>
+                            <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                Servicio
+                            </td>
+                            <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;text-align:right;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                th:text="${treatmentName}">Tratamiento</td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                Fecha
+                            </td>
+                            <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;text-align:right;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                th:text="${appointmentDate}">01/01/2025</td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                Hora
+                            </td>
+                            <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
+                                    text-align:right;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                th:text="${appointmentTime}">09:00</td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+
+            <!-- ╔══ PDF NOTICE ══╗ -->
+            <tr>
+                <td class="padded" style="padding:4px 36px 32px 36px;">
+                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="background-color:#EEF2FC;border-left:3px solid #2855A0;
+                                padding:13px 17px;border-radius:0 3px 3px 0;">
+                                <p style="margin:0;font-size:12px;color:#1F3F7A;line-height:1.65;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                    <strong>Comprobante oficial adjunto.</strong>
+                                    El PDF adjunto a este correo es el respaldo válido del pago.
+                                    Se recomienda conservarlo para cualquier consulta futura.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <!-- ╔══ FOOTER ══╗ -->
+            <tr>
+                <td class="footer"
+                    style="background-color:#F6F8FB;border-top:1px solid #D5D9E0;padding:22px 36px;">
+                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td>
+                                <p style="margin:0 0 3px 0;font-size:12px;font-weight:600;color:#162040;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                   th:text="${clinicName}">Nombre de la Clínica</p>
+                                <p style="margin:0;font-size:11px;color:#8E99AB;line-height:1.8;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                    <span th:text="${clinicEmail}">contacto@clinica.com</span>
+                                    &nbsp;&middot;&nbsp;
+                                    <span th:text="${clinicaWhatsApp}">+54 11 0000-0000</span>
+                                </p>
+                            </td>
+                            <td align="right" class="hide-sm" style="vertical-align:middle;">
+                                <p style="margin:0;font-size:10px;color:#B8C0CC;
+                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                   th:text="'© ' + ${currentYear}">© 2025</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+        </table>
+        <!-- / CARD -->
+
+        <!-- Sub-footer -->
+        <p style="margin:14px 0 0 0;font-size:10px;color:#9AA2B0;text-align:center;
+               font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+            Mensaje generado automáticamente · No responder a este correo
+        </p>
+
+    </td></tr>
 </table>
+<!-- / OUTER WRAPPER -->
 
 </body>
 </html>
