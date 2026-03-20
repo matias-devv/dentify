@@ -2,21 +2,20 @@ package com.dentify.domain.appointment.model;
 
 import com.dentify.domain.agenda.model.Agenda;
 import com.dentify.domain.appointment.enums.AppointmentStatus;
-import com.dentify.domain.dentist.Dentist;
+import com.dentify.domain.clinic.model.Clinic;
+import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.notification.model.Notification;
 import com.dentify.domain.pay.enums.PaymentMethod;
 import com.dentify.domain.patient.model.Patient;
+import com.dentify.domain.pay.enums.PaymentStatus;
 import com.dentify.domain.pay.model.Pay;
 import com.dentify.domain.treatment.model.Treatment;
-import com.dentify.domain.userProfile.model.UserProfile;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Entity @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Table ( name = "appointments") @Builder
@@ -36,10 +35,7 @@ public class Appointment {
     private AppointmentStatus appointmentStatus = AppointmentStatus.SCHEDULED;
 
     @Column( nullable = false)
-    private LocalDate date;
-
-    @Column( nullable = false)
-    private LocalTime startTime;
+    private LocalDateTime appointmentDate;
 
     @Column( nullable = false)
     private Integer duration_minutes;
@@ -52,6 +48,12 @@ public class Appointment {
 
     private LocalDateTime confirmed_at;
     private LocalDateTime cancelled_at;
+
+    Boolean lateArrival = false; // Marks that this appointment went through NO_SHOW → WALK_IN_PENDING → ADMITTED.
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "clinic_id", nullable = false)
+    private Clinic clinic;
 
     // N:1 — The appointment belongs to a specific dentist
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -97,9 +99,13 @@ public class Appointment {
     }
 
     public Pay getPrimaryPayment() {
+
+        // This is because 1 payment -> 1 appointment
+        // There are N payments -> 1 appointment when the patient pays with MercadoPago and chooses to pay in installments.
+        // But most of the time it's 1 payment -> 1 appointment
         return this.pays.stream()
-                .findFirst()
-                .orElseThrow( () -> new IllegalStateException("Appointment without payments. appointmentId=" + this.id_appointment) );
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalStateException("Appointment without payments. appointmentId=" + this.id_appointment));
     }
 
     public boolean isCancelled() {
@@ -108,5 +114,30 @@ public class Appointment {
         if ( this.getAppointmentStatus().equals( AppointmentStatus.CANCELLED_BY_SECRETARY)) return true;
         if ( this.getAppointmentStatus().equals( AppointmentStatus.CANCELLED_BY_PATIENT)) return true;
         return false;
+    }
+
+    public boolean isInTerminalState() {
+
+        AppointmentStatus status = this.getAppointmentStatus();
+
+        // Can only cancel appointments that haven't been attended yet
+        return status == AppointmentStatus.COMPLETED
+                || status == AppointmentStatus.CANCELLED_BY_DENTIST
+                || status == AppointmentStatus.CANCELLED_BY_SECRETARY
+                || status == AppointmentStatus.CANCELLED_BY_SYSTEM
+                || status == AppointmentStatus.CANCELLED_BY_PATIENT
+                || status == AppointmentStatus.NO_SHOW;
+    }
+
+    public boolean isNotConfirmed() {
+        return this.attendanceConfirmed.equals(false) && !this.appointmentStatus.equals(AppointmentStatus.CONFIRMED);
+    }
+
+    public boolean hasAConfirmedPay(){
+        return this.getPays().stream().anyMatch(p -> p.getPayment_status() == PaymentStatus.PAID);
+    }
+
+    public boolean isMarkWithNoShow() {
+        return this.appointmentStatus == AppointmentStatus.NO_SHOW;
     }
 }

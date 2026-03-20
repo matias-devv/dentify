@@ -1,6 +1,7 @@
 package com.dentify.domain.appointment.controller;
 
-import com.dentify.calendar.dto.response.FullAppointmentResponse;
+import com.dentify.domain.appointment.dto.response.AppointmentTodayResponse;
+import com.dentify.domain.appointment.dto.response.FullAppointmentResponse;
 import com.dentify.domain.appointment.dto.request.CancelAppointmentRequest;
 import com.dentify.domain.appointment.dto.request.CreateAppointmentRequestDTO;
 import com.dentify.domain.appointment.dto.response.AppointmentCancelledResponse;
@@ -13,7 +14,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -47,6 +52,22 @@ public class AppointmentController {
     public ResponseEntity<AppointmentCancelledResponse> cancelAppointment(@RequestBody CancelAppointmentRequest request){
 
         AppointmentCancelledResponse response = appointmentService.cancelAppointment(request);
+        return ResponseEntity.status(200).body(response);
+    }
+
+    @PreAuthorize("hasRole('DENTIST')")
+    @GetMapping("/today")
+    public ResponseEntity<List> getAppointmentsTodayForDentist(@AuthenticationPrincipal String username){
+
+        List<AppointmentTodayResponse> response = appointmentService.getAppointmentsTodayForDentist(username);
+        return ResponseEntity.status(200).body(response);
+    }
+
+    @PreAuthorize("hasAnyRole('DENTIST', 'SECRETARY')")
+    @PatchMapping("/admit/{idAppointment}")
+    public ResponseEntity<AppointmentTodayResponse> admitPatient(@PathVariable Long idAppointment){
+
+        AppointmentTodayResponse response = appointmentService.admitPatient(idAppointment);
         return ResponseEntity.status(200).body(response);
     }
 }

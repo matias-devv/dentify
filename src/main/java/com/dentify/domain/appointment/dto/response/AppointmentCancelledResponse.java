@@ -1,7 +1,7 @@
 package com.dentify.domain.appointment.dto.response;
 
 import com.dentify.domain.appointment.enums.AppointmentStatus;
-import com.dentify.domain.patient.dto.CancelledPatientResponse;
+import com.dentify.domain.patient.dto.response.CancelledPatientResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

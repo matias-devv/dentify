@@ -1,6 +1,6 @@
 package com.dentify.domain.appointment.dto.response;
 
-import com.dentify.domain.pay.dto.PayResponse;
+import com.dentify.domain.pay.dto.response.PayResponse;
 import com.dentify.domain.product.dto.response.ProductResponse;
 import com.dentify.domain.treatment.dto.TreatmentResponse;
 import com.dentify.domain.agenda.dto.response.AgendaResponse;

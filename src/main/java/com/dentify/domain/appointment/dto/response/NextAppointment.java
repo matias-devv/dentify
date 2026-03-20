@@ -1,8 +1,8 @@
 package com.dentify.domain.appointment.dto.response;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
-public record NextAppointment(LocalTime time,
+public record NextAppointment(LocalDateTime date,
                               String patient_name,
                               String patient_surname) {
 }

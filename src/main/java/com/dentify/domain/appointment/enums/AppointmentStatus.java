@@ -15,8 +15,6 @@ public enum AppointmentStatus {
     IN_ATTENTION,   // the dentist has started the appointment
                     // explicit status to allow for actual delays
 
-    PENDING_CANCELLATION,  // Patient didn't confirm in 24 hours, last chance
-
     CANCELLED_BY_SYSTEM,   // The system cancelled it due to lack of confirmation
 
     CANCELLED_BY_PATIENT,   // Patient reported absence
@@ -28,8 +26,14 @@ public enum AppointmentStatus {
     COMPLETED,      // medical care completed
                     // appointment closed, not editable
 
-    NO_SHOW;        // patient did not show up (defined with a grace period)
+    NO_SHOW,        // patient did not show up (defined with a grace period)
                     // impacts patient metrics
+
+    WALK_IN_PENDING;
+                        // Patient marked as NO_SHOW who showed up anyway.
+                        // Requires explicit staff action to proceed.
+                        // The original slot is NOT modified in the calendar.
+                        // The patient is waiting in an informal queue.
 
     public static AppointmentStatus fromString(String type) {
         try {
@@ -38,4 +42,6 @@ public enum AppointmentStatus {
             throw new RuntimeException("Invalid appointment status: " + type);
         }
     }
+
+
 }

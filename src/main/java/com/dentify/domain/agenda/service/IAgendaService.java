@@ -1,22 +1,22 @@
 package com.dentify.domain.agenda.service;
 
-import com.dentify.domain.agenda.dto.AgendaRequestDTO;
+import com.dentify.domain.agenda.dto.request.CreateAgendaRequest;
+import com.dentify.domain.agenda.dto.response.CreateAgendaResponse;
 import com.dentify.domain.agenda.model.Agenda;
-import com.dentify.domain.dentist.Dentist;
-import com.dentify.domain.userProfile.model.UserProfile;
+import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.product.model.Product;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Optional;
+import java.util.List;
 
 public interface IAgendaService {
 
-    public String save(AgendaRequestDTO agendaRequestDTO);
+    public CreateAgendaResponse save(CreateAgendaRequest request, String username);
 
-    public Agenda findAgendaById(Long idAgenda);
+    public Agenda findAgendaWithDentistById(Long idAgenda);
 
     void validateIfAgendaIsActive(Agenda agenda);
 
@@ -30,9 +30,9 @@ public interface IAgendaService {
 
     void validateDateWithinAgendaRange(Agenda agenda, LocalDate requestedDate);
 
-    Optional<Agenda> findAgendaWithSchedules(@NotBlank Long idAgenda);
+    Agenda findAgendaWithSchedules(@NotBlank Long idAgenda);
 
-    void validateIfTheAgendaExists(Optional<Agenda> agenda);
+    List<CreateAgendaResponse> findAgendasByDentist(Long id, String username);
 
 //
 //    public String patchStatusAgenda(AgendaRequestDTO agendaRequestDTO);

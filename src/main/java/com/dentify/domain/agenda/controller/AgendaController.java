@@ -1,7 +1,7 @@
 package com.dentify.domain.agenda.controller;
 
-import com.dentify.domain.agenda.dto.CreateAgendaRequest;
-import com.dentify.domain.agenda.dto.CreateAgendaResponse;
+import com.dentify.domain.agenda.dto.request.CreateAgendaRequest;
+import com.dentify.domain.agenda.dto.response.CreateAgendaResponse;
 import com.dentify.domain.agenda.service.IAgendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class AgendaController {
     public ResponseEntity<List<CreateAgendaResponse>> getAgendasByDentist(@AuthenticationPrincipal UserDetails userDetails,
                                                                           @RequestParam ( required = false) Long id) {
 
-        List<CreateAgendaResponse> response = agendaService.findAgendasByDentist(id, userDetails.getUsername());
+        List<CreateAgendaResponse> response = agendaService.findAgendasByDentist( id, userDetails.getUsername() );
         return ResponseEntity.ok(response);
     }
 //

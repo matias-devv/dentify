@@ -15,9 +15,30 @@ import java.util.Optional;
 @Repository
 public interface IAgendaRepository extends JpaRepository<Agenda, Long> {
 
-    @EntityGraph(attributePaths = {"schedules", "schedules.days", "product"})
-    @Query("SELECT a FROM Agenda a " +
-            "LEFT JOIN a.schedules s " +
-            "WHERE a.id_agenda = :id ")
+    @Query("""
+       SELECT a
+       FROM Agenda a
+       JOIN FETCH a.dentist d
+       WHERE a.id_agenda = :agendaId
+       """)
+    Optional<Agenda> findAgendaWithDentistById(@Param("agendaId") Long agendaId);
+
+    @Query("""
+       SELECT DISTINCT a
+       FROM Agenda a
+       JOIN FETCH a.clinic c
+       LEFT JOIN FETCH a.product p
+       LEFT JOIN FETCH a.schedules s
+       LEFT JOIN FETCH s.days d
+       WHERE a.id_agenda = :id
+       """)
     Optional<Agenda> findAgendaWithSchedules(@Param("id") Long id);
+
+    @Query("""
+        SELECT DISTINCT a
+        FROM Agenda a
+        LEFT JOIN FETCH a.schedules s
+        WHERE a.dentist.id = :dentistId
+        """)
+    List<Agenda> findByDentistIdWithSchedules(@Param("dentistId") Long dentistId);
 }
