@@ -1,33 +1,43 @@
 package com.dentify.domain.product.controller;
 
-import com.dentify.calendar.dto.response.ProductResponse;
-import com.dentify.domain.product.dto.ActiveProductResponse;
+import com.dentify.domain.product.dto.response.ActiveProductResponse;
 import com.dentify.domain.product.dto.ProductDTO;
 import com.dentify.domain.product.service.IProductService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
 public class ProductController {
 
-    @Autowired
-    private IProductService productService;
+    private final IProductService productService;
 
+    @PreAuthorize("hasAnyRole('DENTIST','SECRETARY')")
     @PostMapping("/save")
-    public String saveProduct(@RequestBody ProductDTO productDTO) {
-        return productService.saveProduct(productDTO);
+    public ResponseEntity<String> saveProduct(@AuthenticationPrincipal String username,
+                                              @Valid @RequestBody ProductDTO productDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body( productService.saveProduct( username, productDTO) );
     }
 
+    @PreAuthorize("hasAnyRole('DENTIST','SECRETARY')")
     @PostMapping("/save/all")
-    public String saveAll(@RequestBody List<ProductDTO> products) {
-        return productService.saveAll(products);
+    public ResponseEntity<String> saveAll( @AuthenticationPrincipal String username,
+                                           @NotEmpty @Valid @RequestBody List<ProductDTO> products) {
+        return ResponseEntity.status(HttpStatus.CREATED).body( productService.saveAll( username, products) );
     }
 
+    @PreAuthorize("hasAnyRole('DENTIST','SECRETARY')")
     @GetMapping("/active")
-    public List<ActiveProductResponse> getActiveProducts(){
-        return productService.getActiveProducts();
+    public List<ActiveProductResponse> getActiveProducts(@AuthenticationPrincipal String username){
+        return productService.getActiveProducts(username);
     }
 }
