@@ -70,16 +70,52 @@
                                     th:text="${clinicName}">Nombre de la Clínica</h1>
                             </td>
                             <td align="right" style="vertical-align:middle;" class="hide-sm">
-                        <span style="display:inline-block;background-color:#0F3D24;
+                                <span style="display:inline-block;background-color:#0F3D24;
                                       color:#5FD68A;font-size:10px;font-weight:700;
                                       letter-spacing:1.8px;padding:5px 13px;
                                       border-radius:2px;text-transform:uppercase;
                                       font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-                            ✓ Aprobado
-                        </span>
+                                    ✓ Aprobado
+                                </span>
                             </td>
                         </tr>
                     </table>
+                </td>
+            </tr>
+
+            <!-- ╔══ GREETING ══╗ -->
+            <tr>
+                <td class="padded" style="padding:24px 36px 4px 36px;">
+
+                    <!-- Paciente directo -->
+                    <th:block th:if="${isPatient and not isResponsibleAdult}">
+                        <p style="margin:0;font-size:14px;color:#2C3A52;line-height:1.65;
+                           font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                            Hola, <strong th:text="${paciente}">Paciente</strong>.
+                            Tu pago a través de Mercado Pago fue procesado correctamente.
+                            A continuación encontrás el detalle y el comprobante oficial adjunto a este correo.
+                        </p>
+                    </th:block>
+
+                    <!-- Adulto responsable -->
+                    <th:block th:if="${isPatient and isResponsibleAdult}">
+                        <p style="margin:0;font-size:14px;color:#2C3A52;line-height:1.65;
+                           font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                            Le informamos que se procesó el pago vía Mercado Pago correspondiente
+                            al turno de <strong th:text="${patientName}">Nombre Apellido</strong>.
+                            El comprobante oficial se encuentra adjunto a este correo.
+                        </p>
+                    </th:block>
+
+                    <!-- Dentista — copia interna -->
+                    <th:block th:if="${not isPatient}">
+                        <p style="margin:0;font-size:14px;color:#2C3A52;line-height:1.65;
+                           font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                            Copia interna — se emitió el comprobante de pago vía Mercado Pago
+                            para el paciente <strong th:text="${patientName}">Nombre Apellido</strong>.
+                        </p>
+                    </th:block>
+
                 </td>
             </tr>
 
@@ -104,7 +140,6 @@
                                 <p style="margin:7px 0 0 0;font-size:11px;color:#8E99AB;
                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
                                     Mercado Pago
-                                    <!-- Cuotas si aplica -->
                                     <th:block th:if="${mpInstallments != null and mpInstallments != 'Pago único'}">
                                         &nbsp;·&nbsp; <span th:text="${mpInstallments}">3 cuotas</span>
                                     </th:block>
@@ -121,7 +156,6 @@
                                 <p style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#162040;
                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
                                    th:text="${receiptNumber}">COMP-000001</p>
-                                <!-- MP Payment ID si existe -->
                                 <p th:if="${mpPaymentId != null and mpPaymentId != 'N/A'}"
                                    style="margin:0;font-size:10px;color:#8E99AB;
                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
@@ -208,7 +242,7 @@
                 </td>
             </tr>
 
-            <!-- ╔══ MP TRANSACTION DETAIL (solo si hay datos) ══╗ -->
+            <!-- ╔══ MP TRANSACTION DETAIL ══╗ -->
             <tr th:if="${mpDateApproved != null and mpDateApproved != 'N/A'}">
                 <td class="padded" style="padding:0 36px 20px 36px;">
                     <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:2.5px;
@@ -219,7 +253,7 @@
                     </p>
                     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
 
-                        <tr th:if="${mpDateApproved != null and mpDateApproved != 'N/A'}">
+                        <tr>
                             <td style="font-size:12px;color:#8E99AB;padding:9px 0;
                                     border-bottom:1px solid #F0F2F6;width:42%;
                                     font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
@@ -233,13 +267,26 @@
 
                         <tr th:if="${mpInstallments != null}">
                             <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;
                                     font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
                                 Modalidad
                             </td>
                             <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
-                                    text-align:right;
+                                    border-bottom:1px solid #F0F2F6;text-align:right;
                                     font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
                                 th:text="${mpInstallments}">Pago único</td>
+                        </tr>
+
+                        <!-- Referencia externa — útil especialmente en la copia del dentista -->
+                        <tr th:if="${mpExternalReference != null and mpExternalReference != 'N/A'}">
+                            <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                Referencia externa
+                            </td>
+                            <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
+                                    text-align:right;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                th:text="${mpExternalReference}">REF-000001</td>
                         </tr>
 
                     </table>
@@ -253,12 +300,27 @@
                         <tr>
                             <td style="background-color:#EEF2FC;border-left:3px solid #2855A0;
                                 padding:13px 17px;border-radius:0 3px 3px 0;">
-                                <p style="margin:0;font-size:12px;color:#1F3F7A;line-height:1.65;
-                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-                                    <strong>Comprobante oficial adjunto.</strong>
-                                    El PDF adjunto a este correo es el respaldo válido del pago.
-                                    Se recomienda conservarlo para cualquier consulta futura.
-                                </p>
+
+                                <!-- Paciente o adulto responsable -->
+                                <th:block th:if="${isPatient}">
+                                    <p style="margin:0;font-size:12px;color:#1F3F7A;line-height:1.65;
+                                       font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                        <strong>Comprobante oficial adjunto.</strong>
+                                        El PDF adjunto a este correo es el respaldo válido del pago.
+                                        Se recomienda conservarlo para cualquier consulta futura.
+                                    </p>
+                                </th:block>
+
+                                <!-- Dentista -->
+                                <th:block th:if="${not isPatient}">
+                                    <p style="margin:0;font-size:12px;color:#1F3F7A;line-height:1.65;
+                                       font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                        <strong>Copia interna del comprobante.</strong>
+                                        Este correo es una copia del comprobante emitido al paciente.
+                                        El PDF adjunto es el mismo documento enviado como respaldo oficial.
+                                    </p>
+                                </th:block>
+
                             </td>
                         </tr>
                     </table>

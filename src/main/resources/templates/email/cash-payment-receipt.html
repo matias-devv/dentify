@@ -11,12 +11,10 @@
     </o:OfficeDocumentSettings></xml></noscript>
     <![endif]-->
     <style type="text/css">
-        /* CLIENT RESETS */
         body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
         img { border: 0; line-height: 100%; outline: none; text-decoration: none; }
 
-        /* MOBILE */
         @media only screen and (max-width: 600px) {
             .wrapper   { padding: 0 !important; }
             .container { width: 100% !important; border-radius: 0 !important; }
@@ -72,22 +70,59 @@
                                     th:text="${clinicName}">Nombre de la Clínica</h1>
                             </td>
                             <td align="right" style="vertical-align:middle;" class="hide-sm">
-                        <span style="display:inline-block;background-color:#0F3D24;
+                                <span style="display:inline-block;background-color:#0F3D24;
                                       color:#5FD68A;font-size:10px;font-weight:700;
                                       letter-spacing:1.8px;padding:5px 13px;
                                       border-radius:2px;text-transform:uppercase;
                                       font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-                            ✓ Aprobado
-                        </span>
+                                    ✓ Aprobado
+                                </span>
                             </td>
                         </tr>
                     </table>
                 </td>
             </tr>
 
+            <!-- ╔══ GREETING ══╗ -->
+            <tr>
+                <td class="padded" style="padding:24px 36px 4px 36px;">
+
+                    <!-- Paciente directo -->
+                    <th:block th:if="${isPatient and not isResponsibleAdult}">
+                        <p style="margin:0;font-size:14px;color:#2C3A52;line-height:1.65;
+                           font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                            Hola, <strong th:text="${paciente}">Paciente</strong>.
+                            Registramos tu pago correctamente. A continuación encontrás el detalle
+                            y el comprobante oficial adjunto a este correo.
+                        </p>
+                    </th:block>
+
+                    <!-- Adulto responsable -->
+                    <th:block th:if="${isPatient and isResponsibleAdult}">
+                        <p style="margin:0;font-size:14px;color:#2C3A52;line-height:1.65;
+                           font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                            Le informamos que se registró el pago correspondiente al turno de
+                            <strong th:text="${patientName}">Nombre Apellido</strong>.
+                            El comprobante oficial se encuentra adjunto a este correo.
+                        </p>
+                    </th:block>
+
+                    <!-- Dentista — copia interna -->
+                    <th:block th:if="${not isPatient}">
+                        <p style="margin:0;font-size:14px;color:#2C3A52;line-height:1.65;
+                           font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                            Copia interna — se emitió el comprobante de pago en efectivo
+                            para el paciente <strong th:text="${patientName}">Nombre Apellido</strong>.
+                        </p>
+                    </th:block>
+
+                </td>
+            </tr>
+
             <!-- ╔══ AMOUNT BAR ══╗ -->
             <tr>
-                <td style="background-color:#F6F8FB;border-bottom:1px solid #D5D9E0;padding:26px 36px;"
+                <td style="background-color:#F6F8FB;border-bottom:1px solid #D5D9E0;
+                           padding:26px 36px;margin-top:20px;"
                     class="padded">
                     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
                         <tr>
@@ -105,7 +140,10 @@
                                    th:text="${paymentAmount}">$0.00</p>
                                 <p style="margin:7px 0 0 0;font-size:11px;color:#8E99AB;
                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-                                    Efectivo &nbsp;·&nbsp; <span th:text="${paymentStatus}">Aprobado</span>
+                                    <!-- paymentMethod ya viene traducido desde EmailService -->
+                                    <span th:text="${paymentMethod}">Efectivo</span>
+                                    &nbsp;·&nbsp;
+                                    <span th:text="${paymentStatus}">Aprobado</span>
                                 </p>
                             </td>
                             <!-- Receipt number -->
@@ -127,7 +165,6 @@
             <!-- ╔══ APPOINTMENT DETAIL ══╗ -->
             <tr>
                 <td class="padded" style="padding:28px 36px 20px 36px;">
-                    <!-- Section heading -->
                     <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:2.5px;
                            text-transform:uppercase;color:#8E99AB;
                            border-bottom:1px solid #EAEDF1;padding-bottom:12px;
@@ -135,7 +172,6 @@
                         Detalle del Turno
                     </p>
 
-                    <!-- Detail rows -->
                     <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
 
                         <tr>
@@ -188,13 +224,26 @@
 
                         <tr>
                             <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    border-bottom:1px solid #F0F2F6;
                                     font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
                                 Hora
                             </td>
                             <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
-                                    text-align:right;
+                                    border-bottom:1px solid #F0F2F6;text-align:right;
                                     font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
                                 th:text="${appointmentTime}">09:00</td>
+                        </tr>
+
+                        <!-- Lugar de pago — solo si paymentReceivedAt viene populado -->
+                        <tr th:if="${paymentReceivedAt != null}">
+                            <td style="font-size:12px;color:#8E99AB;padding:9px 0;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                Recibido en
+                            </td>
+                            <td style="font-size:13px;font-weight:600;color:#162040;padding:9px 0;
+                                    text-align:right;
+                                    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"
+                                th:text="${paymentReceivedAt}">Consultorio</td>
                         </tr>
 
                     </table>
@@ -208,12 +257,27 @@
                         <tr>
                             <td style="background-color:#EEF2FC;border-left:3px solid #2855A0;
                                 padding:13px 17px;border-radius:0 3px 3px 0;">
-                                <p style="margin:0;font-size:12px;color:#1F3F7A;line-height:1.65;
-                                   font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-                                    <strong>Comprobante oficial adjunto.</strong>
-                                    El PDF adjunto a este correo es el respaldo válido del pago.
-                                    Se recomienda conservarlo para cualquier consulta futura.
-                                </p>
+
+                                <!-- Paciente o adulto responsable -->
+                                <th:block th:if="${isPatient}">
+                                    <p style="margin:0;font-size:12px;color:#1F3F7A;line-height:1.65;
+                                       font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                        <strong>Comprobante oficial adjunto.</strong>
+                                        El PDF adjunto a este correo es el respaldo válido del pago.
+                                        Se recomienda conservarlo para cualquier consulta futura.
+                                    </p>
+                                </th:block>
+
+                                <!-- Dentista -->
+                                <th:block th:if="${not isPatient}">
+                                    <p style="margin:0;font-size:12px;color:#1F3F7A;line-height:1.65;
+                                       font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                                        <strong>Copia interna del comprobante.</strong>
+                                        Este correo es una copia del comprobante emitido al paciente.
+                                        El PDF adjunto es el mismo documento enviado como respaldo oficial.
+                                    </p>
+                                </th:block>
+
                             </td>
                         </tr>
                     </table>
@@ -250,7 +314,6 @@
         </table>
         <!-- / CARD -->
 
-        <!-- Sub-footer -->
         <p style="margin:14px 0 0 0;font-size:10px;color:#9AA2B0;text-align:center;
                font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
             Mensaje generado automáticamente · No responder a este correo
@@ -258,7 +321,6 @@
 
     </td></tr>
 </table>
-<!-- / OUTER WRAPPER -->
 
 </body>
 </html>
