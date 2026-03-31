@@ -4,275 +4,418 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmá tu asistencia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f5f7fa;
-            padding: 20px;
+            font-family: 'DM Sans', Arial, sans-serif;
+            background-color: #F4F3F0;
+            padding: 32px 16px;
             line-height: 1.6;
         }
+
         .email-container {
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px 30px;
-            text-align: center;
-            color: white;
-        }
-        .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .header p {
-            font-size: 16px;
-            opacity: 0.95;
-        }
-        .content {
-            padding: 40px 30px;
-        }
-        .greeting {
-            font-size: 18px;
-            color: #2d3748;
-            margin-bottom: 20px;
-        }
-        .message {
-            color: #4a5568;
-            font-size: 16px;
-            margin-bottom: 30px;
-            line-height: 1.7;
-        }
-        .appointment-card {
-            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
-            border-left: 4px solid #667eea;
             border-radius: 12px;
-            padding: 25px;
-            margin: 30px 0;
+            overflow: hidden;
+            box-shadow: 0 2px 20px rgba(10, 22, 40, 0.08);
         }
-        .appointment-card h2 {
-            color: #2d3748;
-            font-size: 18px;
-            margin-bottom: 20px;
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(175deg, #0D1F3C 0%, #112448 60%, #0A1628 100%);
+            padding: 48px 40px 40px;
+            text-align: center;
+        }
+
+        .header-eyebrow {
+            display: inline-block;
+            color: #4A9EE8;
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 28px;
             font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+            letter-spacing: -0.3px;
         }
+
+        .header-sub {
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 300;
+            color: #8AAFCE;
+            letter-spacing: 0.2px;
+        }
+
+        /* ACCENT BAR */
+        .accent-bar {
+            height: 2px;
+            background: linear-gradient(90deg, #1A6FD4 0%, #0A1628 100%);
+        }
+
+        /* CONTENT */
+        .content {
+            padding: 48px 40px;
+            background-color: #ffffff;
+        }
+
+        .greeting {
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: #0A1628;
+            margin-bottom: 12px;
+        }
+
+        .greeting strong {
+            font-weight: 500;
+            color: #1A6FD4;
+        }
+
+        .message {
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 300;
+            color: #5A6A7A;
+            margin-bottom: 36px;
+            line-height: 1.75;
+        }
+
+        .message strong {
+            color: #0A1628;
+            font-weight: 500;
+        }
+
+        /* APPOINTMENT CARD */
+        .section-eyebrow {
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            color: #1A6FD4;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .appointment-card {
+            background-color: #F8F8F6;
+            border: 1px solid #EAEAE6;
+            border-left: 3px solid #1A6FD4;
+            border-radius: 12px;
+            padding: 28px 28px 20px;
+            margin: 0 0 32px;
+        }
+
+        .appointment-card h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            color: #0A1628;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
         .detail-row {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #EAEAE6;
         }
-        .detail-row:last-child {
-            border-bottom: none;
-        }
+
+        .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+
         .detail-label {
-            color: #718096;
-            font-size: 14px;
+            font-family: 'DM Sans', Arial, sans-serif;
+            color: #6A7A8A;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            font-family: 'DM Sans', Arial, sans-serif;
+            color: #0A1628;
+            font-size: 15px;
             font-weight: 500;
         }
-        .detail-value {
-            color: #2d3748;
-            font-size: 16px;
-            font-weight: 700;
-        }
+
+        /* PAYMENT INFO — CASH */
         .payment-info {
-            background-color: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 25px 0;
-            text-align: center;
-        }
-        .payment-info .icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-        .payment-info p {
-            color: #856404;
-            font-size: 15px;
-            font-weight: 600;
-        }
-        .payment-info .amount {
-            color: #d39e00;
-            font-size: 24px;
-            font-weight: 700;
-            margin-top: 8px;
-        }
-        .confirm-button-container {
-            text-align: center;
-            margin: 40px 0;
-        }
-        .confirm-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #ffffff !important;
-            text-decoration: none;
-            padding: 18px 50px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-        }
-        .confirm-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5);
-        }
-        .confirm-helper {
-            color: #718096;
-            font-size: 13px;
-            margin-top: 15px;
-        }
-        .divider {
-            height: 1px;
-            background: linear-gradient(to right, transparent, #cbd5e0, transparent);
-            margin: 30px 0;
-        }
-        .cancel-info {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 25px;
-        }
-        .cancel-info h3 {
-            color: #2d3748;
-            font-size: 16px;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-        .cancel-info p {
-            color: #4a5568;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        .cancel-info .contact-item {
+            background-color: #F8F8F6;
+            border: 1px solid #EAEAE6;
+            border-left: 3px solid #1A6FD4;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin: 0 0 32px;
             display: flex;
             align-items: center;
-            margin: 8px 0;
-            color: #667eea;
-            font-weight: 600;
+            justify-content: space-between;
+            gap: 16px;
         }
-        .cancel-info .contact-item span {
-            margin-left: 8px;
-        }
-        .footer {
-            background-color: #f8f9fa;
-            padding: 30px;
-            text-align: center;
-            color: #718096;
+
+        .payment-info-body { flex: 1; }
+
+        .payment-info-label {
+            font-family: 'DM Sans', Arial, sans-serif;
             font-size: 13px;
+            font-weight: 500;
+            color: #0A1628;
+            margin-bottom: 3px;
         }
-        .footer p {
-            margin: 5px 0;
+
+        .payment-info-desc {
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 300;
+            color: #6A7A8A;
         }
-        @media only screen and (max-width: 600px) {
-            .email-container {
-                border-radius: 0;
-            }
-            .content {
-                padding: 30px 20px;
-            }
-            .header {
-                padding: 30px 20px;
-            }
-            .confirm-button {
-                padding: 16px 40px;
-                font-size: 16px;
-            }
+
+        .payment-amount {
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 22px;
+            font-weight: 500;
+            color: #1A6FD4;
+            white-space: nowrap;
+        }
+
+        /* CTA */
+        .cta-section {
+            background: linear-gradient(175deg, #0D1F3C 0%, #0A1628 100%);
+            border-radius: 12px;
+            padding: 40px 32px;
+            text-align: center;
+            margin: 0 0 32px;
+        }
+
+        .cta-label {
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            color: #4A9EE8;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .cta-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 24px;
+        }
+
+        .confirm-button {
+            display: inline-block;
+            background-color: #1A6FD4;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 16px 40px;
+            border-radius: 6px;
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .confirm-helper {
+            font-family: 'DM Sans', Arial, sans-serif;
+            color: #6A8FAE;
+            font-size: 12px;
+            font-weight: 300;
+            margin-top: 14px;
+        }
+
+        /* DIVIDER */
+        .divider {
+            height: 1px;
+            background: #EAEAE6;
+            margin: 32px 0;
+        }
+
+        /* CANCEL INFO */
+        .cancel-info {
+            background-color: #F8F8F6;
+            border: 1px solid #EAEAE6;
+            border-radius: 8px;
+            padding: 24px 28px;
+        }
+
+        .cancel-info h3 {
+            font-family: 'DM Sans', Arial, sans-serif;
+            color: #0A1628;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .cancel-info p {
+            font-family: 'DM Sans', Arial, sans-serif;
+            color: #5A6A7A;
+            font-size: 13px;
+            font-weight: 300;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1A6FD4;
+        }
+
+        .contact-item span { margin-left: 8px; }
+
+        .cancel-warning {
+            margin-top: 16px;
+            font-family: 'DM Sans', Arial, sans-serif;
+            color: #5A6A7A;
+            font-size: 12px;
+            font-weight: 400;
+            border-left: 3px solid #1A6FD4;
+            padding-left: 14px;
+        }
+
+        /* FOOTER */
+        .footer {
+            background: linear-gradient(175deg, #0D1F3C 0%, #060E1C 100%);
+            padding: 28px 40px;
+            text-align: center;
+        }
+
+        .footer-brand {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+        }
+
+        .footer-note {
+            font-family: 'DM Sans', Arial, sans-serif;
+            font-size: 11px;
+            font-weight: 300;
+            color: #6A8FAE;
+            letter-spacing: 0.3px;
+        }
+
+        @media only screen and (max-width: 620px) {
+            body { padding: 0; }
+            .email-container { border-radius: 0; }
+            .content { padding: 32px 24px; }
+            .header { padding: 36px 24px 30px; }
+            .cta-section { padding: 32px 20px; }
+            .payment-info { flex-direction: column; align-items: flex-start; gap: 10px; }
         }
     </style>
 </head>
 <body>
 <div class="email-container">
-    <!-- Header -->
+
     <div class="header">
-        <h1>🔔 Confirmá tu Asistencia</h1>
-        <p>Tu turno es en 2 días</p>
+        <div class="header-eyebrow">Recordatorio de turno</div>
+        <h1>Confirmá tu Asistencia</h1>
+        <p class="header-sub">Tu turno está programado para en 2 días</p>
     </div>
 
-    <!-- Content -->
-    <div class="content">
-        <p class="greeting">Hola <strong th:text="${paciente}">Paciente</strong>,</p>
+    <div class="accent-bar"></div>
 
-        <p class="message">
-            Te recordamos que tenés un turno programado. Para asegurar tu lugar,
-            <strong>necesitamos que confirmes tu asistencia</strong>.
+    <div class="content">
+
+        <p class="greeting" th:if="${not isResponsibleAdult}">
+            Hola, <strong th:text="${paciente}">Paciente</strong>
+        </p>
+        <p class="greeting" th:if="${isResponsibleAdult}">
+            Hola, adulto responsable de <strong th:text="${paciente}">Paciente</strong>
         </p>
 
-        <!-- Appointment Details -->
+        <p class="message">
+            Te recordamos que tenés un turno programado próximamente.
+            Para asegurar tu lugar, <strong>necesitamos que confirmes tu asistencia</strong>.
+        </p>
+
+        <div class="section-eyebrow">Detalle del turno</div>
+
         <div class="appointment-card">
-            <h2>📅 Detalles del Turno</h2>
+            <h2>Información del Turno</h2>
 
             <div class="detail-row">
-                <span class="detail-label">📆 Fecha</span>
+                <span class="detail-label">Fecha</span>
                 <span class="detail-value" th:text="${fecha}">01/02/2026</span>
             </div>
 
             <div class="detail-row">
-                <span class="detail-label">🕐 Hora</span>
+                <span class="detail-label">Hora</span>
                 <span class="detail-value" th:text="${hora}">10:00</span>
             </div>
 
             <div class="detail-row">
-                <span class="detail-label">👨‍⚕️ Profesional</span>
+                <span class="detail-label">Profesional</span>
                 <span class="detail-value" th:text="${dentista}">Dr./Dra.</span>
             </div>
         </div>
 
-        <!-- Payment Info (Cash) -->
         <div class="payment-info">
-            <div class="icon">💵</div>
-            <p>Recordá traer el pago en efectivo o QR</p>
-            <div class="amount" th:text="'$' + ${monto}">$5,000</div>
+            <div class="payment-info-body">
+                <p class="payment-info-label">Pago en el consultorio</p>
+                <p class="payment-info-desc">Podés abonar en efectivo o mediante QR al llegar</p>
+            </div>
+            <span class="payment-amount" th:text="'$ ' + ${monto}">$ 5.000</span>
         </div>
 
-        <!-- Confirm Button -->
-        <div class="confirm-button-container">
+        <div class="cta-section">
+            <p class="cta-label">Acción requerida</p>
+            <p class="cta-title">¿Vas a asistir a tu turno?</p>
             <a th:href="${confirmationUrl}" class="confirm-button">
-                ✅ Confirmar mi Asistencia
+                Confirmar mi Asistencia
             </a>
-            <p class="confirm-helper">
-                Hacé clic en el botón para confirmar que asistirás
-            </p>
+            <p class="confirm-helper">Hacé clic para confirmar que asistirás</p>
         </div>
 
         <div class="divider"></div>
 
-        <!-- Cancellation Info -->
         <div class="cancel-info">
-            <h3>⚠️ ¿No podés asistir?</h3>
-            <p>Si no podés venir, por favor avisanos para liberar el horario:</p>
+            <h3>¿No podés asistir?</h3>
+            <p>Si no podés venir, avisanos con anticipación para liberar el horario:</p>
 
             <div class="contact-item">
-                📧 <span th:text="${clinicaEmail}">info@clinica.com</span>
+                <span>&#9993;</span>
+                <span th:text="${clinicEmail}">info@clinica.com</span>
             </div>
             <div class="contact-item">
-                📱 <span th:text="${clinicaWhatsApp}">+54 11 1234-5678</span>
+                <span>&#9742;</span>
+                <span th:text="${clinicaWhatsApp}">+54 11 1234-5678</span>
             </div>
 
-            <p style="margin-top: 15px; color: #e53e3e; font-weight: 600;">
-                Si no confirmás tu asistencia, tu turno será cancelado automáticamente.
+            <p class="cancel-warning">
+                Si no confirmás tu asistencia, el turno será cancelado automáticamente por el sistema.
             </p>
         </div>
+
     </div>
 
-    <!-- Footer -->
     <div class="footer">
-        <p><strong>Software Dental Pro</strong></p>
-        <p>Este es un mensaje automático, por favor no respondas a este correo.</p>
+        <p class="footer-brand" th:text="${clinicName}">Clínica</p>
+        <p class="footer-note">Este es un mensaje automático — por favor no respondas a este correo.</p>
     </div>
+
 </div>
 </body>
 </html>
