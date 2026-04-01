@@ -56,11 +56,19 @@ public class Agenda extends TenantEntity {
 
     //helper method para bidirectional sync
     public void addSchedule(Schedule schedule) {
-        schedules.add(schedule);
+
+        if ( this.schedules != null) this.schedules.add(schedule);
+        else{
+            Set<Schedule> schedules = new HashSet<>();
+
+            schedules.add(schedule);
+
+            this.schedules = schedules;
+        }
         schedule.setAgenda(this);
     }
 
-    public void removeHorario(Schedule schedule) {
+    public void removeSchedule(Schedule schedule) {
         schedules.remove(schedule);
         schedule.setAgenda(null);
     }

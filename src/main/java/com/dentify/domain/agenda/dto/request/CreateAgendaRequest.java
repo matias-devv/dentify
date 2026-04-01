@@ -1,21 +1,34 @@
 package com.dentify.domain.agenda.dto.request;
 
 import com.dentify.domain.schedule.dto.request.ScheduleRequest;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public record CreateAgendaRequest(@NotBlank String agendaName,
-                                  @NotNull LocalDate startDate,
-                                  @NotNull LocalDate finalDate,
-                                  @NotNull Integer duration_minutes,
-                                  @NotNull Boolean active,
+public record CreateAgendaRequest(@NotBlank(message = "the agenda name is required")
+                                  String agendaName,
 
-                                  Long idDentist, // nullable: null if the caller is DENTIST
+                                  @NotNull(message = "startDate is required")
+                                  LocalDate startDate,
+
+                                  @NotNull(message = "finalDate is required")
+                                  @Future(message = "finalDate must be in the future")
+                                  LocalDate finalDate,
+
+                                  @NotNull(message = "duration_minutes is required")
+                                  Integer duration_minutes,
+
+                                  @NotNull(message = "active flag is required")
+                                  Boolean active,
+
+                                  @NotNull(message = "idDentist is required")
+                                  Long idDentist,
 
                                   Long idProduct, // nullable: schedule with no assigned product
 
-                                  @NotNull List<ScheduleRequest> schedules) {
+                                  @NotNull(message = "schedules list is required")
+                                  List<ScheduleRequest> schedules) {
 }

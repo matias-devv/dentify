@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -20,19 +21,18 @@ public class AgendaController {
 
     private final IAgendaService agendaService;
 
-    @PostMapping
-    public ResponseEntity<CreateAgendaResponse> createAgenda(@AuthenticationPrincipal UserDetails userDetails,
-                                                       @RequestBody @Valid CreateAgendaRequest request) {
-
-        CreateAgendaResponse response = agendaService.save(request, userDetails.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @PreAuthorize("hasAnyRole('DENTIST','SECRETARY')")
+    @PostMapping("/save")
+    public ResponseEntity<CreateAgendaResponse> createAgenda(@AuthenticationPrincipal String username,
+                                                             @RequestBody @Valid CreateAgendaRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body( agendaService.save(request, username)) ;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<List<CreateAgendaResponse>> getAgendasByDentist(@AuthenticationPrincipal UserDetails userDetails,
-                                                                          @RequestParam ( required = false) Long id) {
+    public ResponseEntity<List<CreateAgendaResponse>> getAgendasByDentist(@AuthenticationPrincipal String username,
+                                                                          @PathVariable Long id) {
 
-        List<CreateAgendaResponse> response = agendaService.findAgendasByDentist( id, userDetails.getUsername() );
+        List<CreateAgendaResponse> response = agendaService.findAgendasByDentist( id, username );
         return ResponseEntity.ok(response);
     }
 //

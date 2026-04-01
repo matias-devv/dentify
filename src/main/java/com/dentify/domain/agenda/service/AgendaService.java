@@ -8,20 +8,12 @@ import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
 import com.dentify.domain.schedule.service.IScheduleService;
 import com.dentify.exception.agenda.*;
-import com.dentify.exception.schedule.InvalidScheduleException;
 import com.dentify.domain.product.model.Product;
 import com.dentify.domain.product.service.IProductService;
-import com.dentify.domain.schedule.dto.request.ScheduleRequest;
-import com.dentify.domain.schedule.model.Schedule;
 import com.dentify.mapper.AgendaMapper;
-import com.dentify.mapper.ScheduleMapper;
-import com.dentify.security.model.AuthUser;
-import com.dentify.security.multitenancy.TenantContext;
-import com.dentify.security.service.IAuthUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -36,7 +28,6 @@ public class AgendaService implements IAgendaService {
     //services
     private final IDentistService dentistService;
     private final IProductService productService;
-    private final IAuthUserService authUserService;
     private final IScheduleService scheduleService;
 
     //mappers
@@ -45,22 +36,20 @@ public class AgendaService implements IAgendaService {
     @Override
     public CreateAgendaResponse save(CreateAgendaRequest request, String username) {
 
-        AuthUser caller = authUserService.findAuthUserByUsername( username);
-
-        boolean isDentist = caller.hasRole("DENTIST" );
-
-        Dentist dentist = dentistService.resolveDentist( isDentist, request.idDentist(), username);
+        Dentist dentist = dentistService.resolveDentist( request.idDentist(), username);
 
         this.validationsToAgendaRequest(request);
 
         //create agenda
         Agenda agenda = agendaMapper.setAttributesNewAgenda(request);
 
-        productService.setProductToAgenda( request, agenda);
+        productService.setProductToAgenda( request.idProduct(), agenda);
 
         agenda.setDentist(dentist);
 
-        scheduleService.addSchedulesToAgenda( request, agenda);
+        scheduleService.addSchedulesToAgenda( request.schedules(), request.duration_minutes(), agenda);
+
+        agenda.setClinic( dentist.getClinic() );
 
         agendaRepository.save(agenda);
 
@@ -115,29 +104,32 @@ public class AgendaService implements IAgendaService {
 
     private void validateName(CreateAgendaRequest request) {
         if( request.agendaName() == null || request.agendaName().isEmpty() ){
-            throw new InvalidAgendaNameException("the agenda name cannot be empty");
+            throw new InvalidAgendaNameException("The agenda name cannot be empty");
         }
         if( request.agendaName().length() < 3){
-            throw new InvalidAgendaNameException("the agenda name is too short");
+            throw new InvalidAgendaNameException("The agenda name is too short");
         }
         if( request.agendaName().length() > 30 ){
-            throw new InvalidAgendaNameException("the agenda name is too long");
+            throw new InvalidAgendaNameException("The agenda name is too long");
         }
     }
 
     private void validateDates(CreateAgendaRequest request) {
-        if ( request.startDate().isBefore(LocalDate.now()) ){
-            throw new InvalidAgendaDateException("the date cannot be before the current date");
+        if ( request.startDate().isBefore(LocalDate.now() ) ){
+            throw new InvalidAgendaDateException("The date cannot be before the current date");
         }
-        if ( request.finalDate().isBefore(request.startDate())){
-            throw new InvalidAgendaDateException("the start date cannot be before the final date");
+        if ( request.finalDate().isBefore(request.startDate() ) ){
+            throw new InvalidAgendaDateException("The final date cannot be before the start date");
+        }
+        if ( request.startDate().isEqual(request.finalDate() ) ){
+            throw new InvalidAgendaDateException("The agenda cannot be for just one day");
         }
     }
 
     @Override
     public void validateDateRangeInAgenda(Agenda agenda, LocalDate startDate, LocalDate endDate) {
 
-        if ( !agenda.getStart_date().isBefore(startDate) && !agenda.getFinal_date().isAfter(endDate) ) {
+        if ( !agenda.getStart_date().isBefore(startDate) || !agenda.getFinal_date().isAfter(endDate) ) {
             throw new AgendaDateOutOfRangeException("The requested dates are not in the valid range defined in the calendar.");
         }
     }
@@ -165,17 +157,13 @@ public class AgendaService implements IAgendaService {
     @Override
     public List<CreateAgendaResponse> findAgendasByDentist(Long id, String username) {
 
-        AuthUser caller = authUserService.findAuthUserByUsername( username);
-
-        boolean isDentist = caller.hasRole( "DENTIST" );
-
-        Dentist dentist = dentistService.resolveDentist( isDentist, id, username);
+        Dentist dentist = dentistService.resolveDentist(  id, username);
 
         List<Agenda> agendas = agendaRepository.findByDentistIdWithSchedules( dentist.getId() );
 
         return agendas.stream()
-                .map(agendaMapper::createAgendaResponse)
-                .toList();
+                      .map(agendaMapper::createAgendaResponse)
+                      .toList();
     }
 
 
