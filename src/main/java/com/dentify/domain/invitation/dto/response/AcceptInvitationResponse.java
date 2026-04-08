@@ -1,4 +1,6 @@
 package com.dentify.domain.invitation.dto.response;
 
-public class AcceptInvitationResponse {
+public record AcceptInvitationResponse(String message,
+                                       String email,
+                                       String role) {
 }
