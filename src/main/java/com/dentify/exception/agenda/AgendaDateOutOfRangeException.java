@@ -1,7 +1,11 @@
-package com.dentify.domain.exception.agenda;
+package com.dentify.exception.agenda;
 
-public class AgendaDateOutOfRangeException extends RuntimeException {
+import com.dentify.exception.dto.AppException;
+
+public class AgendaDateOutOfRangeException extends RuntimeException implements AppException {
     private final String errorCode = "AGENDA_DATE_OUT_OF_RANGE";
+
     public AgendaDateOutOfRangeException(String message) { super(message); }
+
     public String getErrorCode() { return errorCode; }
 }

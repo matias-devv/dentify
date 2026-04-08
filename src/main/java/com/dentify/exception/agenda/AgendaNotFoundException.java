@@ -1,6 +1,8 @@
-package com.dentify.domain.exception.agenda;
+package com.dentify.exception.agenda;
 
-public class AgendaNotFoundException extends RuntimeException {
+import com.dentify.exception.dto.AppException;
+
+public class AgendaNotFoundException extends RuntimeException  implements AppException {
     private final String errorCode = "AGENDA_NOT_FOUND";
     public AgendaNotFoundException(String message) { super(message); }
     public String getErrorCode() { return errorCode; }
