@@ -1,6 +1,6 @@
-package com.dentify.domain.exception.dentist;
+package com.dentify.exception.dentist;
 
-import com.dentify.domain.exception.dto.AppException;
+import com.dentify.exception.dto.AppException;
 
 public class DentistNotFoundException extends RuntimeException implements AppException {
     private final String errorCode = "DENTIST_NOT_FOUND";

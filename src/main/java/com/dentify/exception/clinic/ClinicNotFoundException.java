@@ -1,6 +1,6 @@
-package com.dentify.domain.exception.clinic;
+package com.dentify.exception.clinic;
 
-import com.dentify.domain.exception.dto.AppException;
+import com.dentify.exception.dto.AppException;
 
 public class ClinicNotFoundException extends RuntimeException implements AppException {
 

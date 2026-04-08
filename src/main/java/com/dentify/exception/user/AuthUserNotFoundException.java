@@ -1,6 +1,6 @@
-package com.dentify.domain.exception.user;
+package com.dentify.exception.user;
 
-import com.dentify.domain.exception.dto.AppException;
+import com.dentify.exception.dto.AppException;
 
 public class AuthUserNotFoundException extends RuntimeException implements AppException {
     private final String errorCode = "AUTH_USER_NOT_FOUND";
