@@ -5,10 +5,10 @@ import com.dentify.domain.appointment.enums.AppointmentStatus;
 import com.dentify.domain.clinic.model.Clinic;
 import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.notification.model.Notification;
-import com.dentify.domain.pay.enums.PaymentMethod;
+import com.dentify.domain.payment.enums.PaymentMethod;
 import com.dentify.domain.patient.model.Patient;
-import com.dentify.domain.pay.enums.PaymentStatus;
-import com.dentify.domain.pay.model.Pay;
+import com.dentify.domain.payment.enums.PaymentStatus;
+import com.dentify.domain.payment.model.TreatmentPayment;
 import com.dentify.domain.treatment.model.Treatment;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,7 +35,10 @@ public class Appointment {
     private AppointmentStatus appointmentStatus = AppointmentStatus.SCHEDULED;
 
     @Column( nullable = false)
-    private LocalDateTime appointmentDate;
+    private LocalDateTime appointmentStart;
+
+    @Column(nullable = false)
+    private LocalDateTime appointmentEnd;
 
     @Column( nullable = false)
     private Integer duration_minutes;
@@ -67,7 +70,7 @@ public class Appointment {
 
     //one appointment -> n pays
     @OneToMany ( mappedBy = "appointment")
-    private List<Pay> pays;
+    private List<TreatmentPayment> payments;
 
     //one appointment -> n notifications
     @OneToMany ( mappedBy = "appointment")
@@ -92,20 +95,20 @@ public class Appointment {
     private LocalDateTime updatedAt;
 
     public PaymentMethod getPrimaryPaymentMethod() {
-        return this.pays.stream()
-                .findFirst()
-                .map(Pay::getPayment_method)
-                .orElse(null);
+        return this.payments.stream()
+                            .findFirst()
+                            .map(TreatmentPayment::getPayment_method)
+                            .orElse(null);
     }
 
-    public Pay getPrimaryPayment() {
+    public TreatmentPayment getPrimaryPayment() {
 
         // This is because 1 payment -> 1 appointment
         // There are N payments -> 1 appointment when the patient pays with MercadoPago and chooses to pay in installments.
         // But most of the time it's 1 payment -> 1 appointment
-        return this.pays.stream()
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("Appointment without payments. appointmentId=" + this.id_appointment));
+        return this.payments.stream()
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("Appointment without payments. appointmentId=" + this.id_appointment));
     }
 
     public boolean isCancelled() {
@@ -134,10 +137,30 @@ public class Appointment {
     }
 
     public boolean hasAConfirmedPay(){
-        return this.getPays().stream().anyMatch(p -> p.getPayment_status() == PaymentStatus.PAID);
+        return this.getPayments().stream().anyMatch(p -> p.getPayment_status() == PaymentStatus.PAID);
     }
 
     public boolean isMarkWithNoShow() {
         return this.appointmentStatus == AppointmentStatus.NO_SHOW;
+    }
+
+    public boolean isAdmited(){
+        return this.appointmentStatus == AppointmentStatus.ADMITTED;
+    }
+
+    public boolean isInAtention(){
+        return this.appointmentStatus == AppointmentStatus.IN_ATTENTION;
+    }
+
+    public boolean isScheduled(){
+        return this.appointmentStatus == AppointmentStatus.SCHEDULED;
+    }
+
+    public boolean isConfirmed(){
+        return this.appointmentStatus == AppointmentStatus.CONFIRMED;
+    }
+
+    public boolean isWalkInPending() {
+        return this.appointmentStatus == AppointmentStatus.WALK_IN_PENDING;
     }
 }
