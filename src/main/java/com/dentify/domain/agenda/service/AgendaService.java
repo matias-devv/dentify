@@ -6,17 +6,20 @@ import com.dentify.domain.agenda.model.Agenda;
 import com.dentify.domain.agenda.repository.IAgendaRepository;
 import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
+import com.dentify.domain.schedule.model.Schedule;
 import com.dentify.domain.schedule.service.IScheduleService;
 import com.dentify.exception.agenda.*;
-import com.dentify.domain.product.model.Product;
 import com.dentify.domain.product.service.IProductService;
+import com.dentify.exception.schedule.InvalidScheduleTimeException;
 import com.dentify.mapper.AgendaMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -43,13 +46,13 @@ public class AgendaService implements IAgendaService {
         //create agenda
         Agenda agenda = agendaMapper.setAttributesNewAgenda(request);
 
-        productService.setProductToAgenda( request.idProduct(), agenda);
-
         agenda.setDentist(dentist);
 
         scheduleService.addSchedulesToAgenda( request.schedules(), request.duration_minutes(), agenda);
 
         agenda.setClinic( dentist.getClinic() );
+
+        productService.setProductToAgenda( request.idProduct(), agenda);
 
         agendaRepository.save(agenda);
 
@@ -60,6 +63,8 @@ public class AgendaService implements IAgendaService {
         this.validateDates(request);
 
         this.validateName(request);
+
+        this.validateDuration(request);
 
         scheduleService.validateNullSchedules(request);
     }
@@ -78,10 +83,27 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public void validateAgendaAvailability(Agenda agenda, LocalDate date, LocalTime start_time) {
+    public void validateAgendaAvailability(Agenda agenda, LocalDate date, LocalTime startTime) {
 
-        if (date.isBefore(agenda.getStart_date()) || date.isAfter(agenda.getFinal_date() ) )
+        if ( date.isBefore( agenda.getStart_date() ) || date.isAfter( agenda.getFinal_date() ) )
             throw new AgendaDateOutOfRangeException("Date outside agenda range");
+
+        Map<DayOfWeek, List<Schedule>> mapSchedules = agenda.fillMapDays();
+
+        if ( mapSchedules.get( date.getDayOfWeek() ) == null){
+            throw new DayOfAgendaNotFoundException("The choosen date needs to be an operative day in the agenda");
+        }
+        else{
+            List<Schedule> scheduleList = mapSchedules.get( date.getDayOfWeek() );
+
+            for ( Schedule s :  scheduleList){
+
+                if ( !startTime.isBefore( s.getStart_time() ) && startTime.isBefore( s.getEnd_time()) ){
+                    return;
+                }
+            }
+            throw new InvalidScheduleTimeException("The start time is outside all operative schedules for this day");
+        }
     }
 
     @Override
@@ -93,25 +115,13 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public void validateCreateAppointment(Agenda agenda, Dentist dentist, Product product, LocalDate date, LocalTime starTime) {
+    public void validatAgendaToCreateAppointment(Agenda agenda, Dentist dentist, LocalDate date, LocalTime starTime) {
 
         this.validateIfAgendaIsActive( agenda);
 
         this.verifyIfThisAgendaBelongsToTheDentist( agenda, dentist);
 
         this.validateAgendaAvailability( agenda, date, starTime);
-    }
-
-    private void validateName(CreateAgendaRequest request) {
-        if( request.agendaName() == null || request.agendaName().isEmpty() ){
-            throw new InvalidAgendaNameException("The agenda name cannot be empty");
-        }
-        if( request.agendaName().length() < 3){
-            throw new InvalidAgendaNameException("The agenda name is too short");
-        }
-        if( request.agendaName().length() > 30 ){
-            throw new InvalidAgendaNameException("The agenda name is too long");
-        }
     }
 
     private void validateDates(CreateAgendaRequest request) {
@@ -123,6 +133,25 @@ public class AgendaService implements IAgendaService {
         }
         if ( request.startDate().isEqual(request.finalDate() ) ){
             throw new InvalidAgendaDateException("The agenda cannot be for just one day");
+        }
+    }
+
+    private void validateDuration(CreateAgendaRequest request) {
+
+        if ( request.duration_minutes() > 120) throw new InvalidAgendaDurationException("The time blocks allocated to each appointment cannot exceed 2 hours.");
+
+        if ( request.duration_minutes() < 5) throw new InvalidAgendaDurationException("The time blocks allocated to each appointment cannot be less than 5 minutes.");
+    }
+
+    private void validateName(CreateAgendaRequest request) {
+        if( request.agendaName() == null || request.agendaName().isEmpty() ){
+            throw new InvalidAgendaNameException("The agenda name cannot be empty");
+        }
+        if( request.agendaName().length() < 3){
+            throw new InvalidAgendaNameException("The agenda name is too short");
+        }
+        if( request.agendaName().length() > 30 ){
+            throw new InvalidAgendaNameException("The agenda name is too long");
         }
     }
 

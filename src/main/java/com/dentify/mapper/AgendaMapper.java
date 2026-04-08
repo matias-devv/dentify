@@ -39,7 +39,7 @@ public class AgendaMapper {
                 agenda.getStart_date(),
                 agenda.getFinal_date(),
                 agenda.getProduct() != null ? agenda.getProduct().getId_product() : null,
-                agenda.getProduct() != null ? agenda.getProduct().getName_product() : null,
+                agenda.getProduct() != null ? agenda.getProduct().getNameProduct() : null,
                 schedules);
     }
 
