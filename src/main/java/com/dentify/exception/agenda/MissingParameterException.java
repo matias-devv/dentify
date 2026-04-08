@@ -1,6 +1,8 @@
-package com.dentify.domain.exception.agenda;
+package com.dentify.exception.agenda;
 
-public class MissingParameterException extends RuntimeException {
+import com.dentify.exception.dto.AppException;
+
+public class MissingParameterException extends RuntimeException implements AppException {
     private final String errorCode = "MISSING_PARAMETER";
     public MissingParameterException(String message) { super(message); }
     public String getErrorCode() { return errorCode; }

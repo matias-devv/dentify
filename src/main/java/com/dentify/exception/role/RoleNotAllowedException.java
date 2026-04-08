@@ -1,6 +1,6 @@
-package com.dentify.domain.exception.role;
+package com.dentify.exception.role;
 
-import com.dentify.domain.exception.dto.AppException;
+import com.dentify.exception.dto.AppException;
 
 public class RoleNotAllowedException extends RuntimeException implements AppException {
 

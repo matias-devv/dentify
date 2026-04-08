@@ -1,6 +1,6 @@
-package com.dentify.domain.exception.invitation;
+package com.dentify.exception.invitation;
 
-import com.dentify.domain.exception.dto.AppException;
+import com.dentify.exception.dto.AppException;
 
 public class PendingInvitationException extends RuntimeException implements AppException {
 

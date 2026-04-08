@@ -1,6 +1,6 @@
-package com.dentify.domain.exception.patient;
+package com.dentify.exception.patient;
 
-import com.dentify.domain.exception.dto.AppException;
+import com.dentify.exception.dto.AppException;
 
 public class PatientNotFoundException extends RuntimeException implements AppException {
 
