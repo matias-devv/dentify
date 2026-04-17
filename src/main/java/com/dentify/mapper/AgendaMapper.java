@@ -35,9 +35,11 @@ public class AgendaMapper {
         return new CreateAgendaResponse(
                 agenda.getId_agenda(),
                 agenda.getAgenda_name(),
+                agenda.getDentist().getUserProfile().getName() + " " + agenda.getDentist().getUserProfile().getSurname(),
                 agenda.getActive(),
                 agenda.getStart_date(),
                 agenda.getFinal_date(),
+                agenda.getDuration_minutes(),
                 agenda.getProduct() != null ? agenda.getProduct().getId_product() : null,
                 agenda.getProduct() != null ? agenda.getProduct().getNameProduct() : null,
                 schedules);

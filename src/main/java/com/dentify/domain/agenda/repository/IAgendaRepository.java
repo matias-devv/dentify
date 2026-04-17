@@ -41,4 +41,11 @@ public interface IAgendaRepository extends JpaRepository<Agenda, Long> {
         WHERE a.dentist.id = :dentistId
         """)
     List<Agenda> findByDentistIdWithSchedules(@Param("dentistId") Long dentistId);
+
+    @Query("SELECT a FROM Agenda a " +
+            "JOIN FETCH a.dentist d " +
+            "JOIN FETCH d.userProfile " +
+            "LEFT JOIN FETCH a.product " +
+            "LEFT JOIN FETCH a.schedules")
+    List<Agenda> findAgendasByClinicId(@Param("clinicId") Long clinicId);
 }

@@ -24,7 +24,10 @@ public interface IAgendaService {
 
     void verifyIfThisAgendaBelongsToTheDentist(Agenda agenda, Dentist dentist);
 
-    void validateCreateAppointment(Agenda agenda, Dentist dentist, Product product, @NotBlank(message = "The date is mandatory") @Future(message = "The date must be in the future.") LocalDate date, @NotBlank(message = "The start time is mandatory") LocalTime starTime);
+    void validatAgendaToCreateAppointment(Agenda agenda, Dentist dentist,
+                                   @NotBlank(message = "The date is mandatory")
+                                   @Future(message = "The date must be in the future.") LocalDate date,
+                                   @NotBlank(message = "The start time is mandatory") LocalTime starTime);
 
     void validateDateRangeInAgenda(Agenda agenda, LocalDate startDate, LocalDate endDate);
 
@@ -33,6 +36,8 @@ public interface IAgendaService {
     Agenda findAgendaWithSchedules(@NotBlank Long idAgenda);
 
     List<CreateAgendaResponse> findAgendasByDentist(Long id, String username);
+
+    List<CreateAgendaResponse> findAgendasByClinic(String username);
 
 //
 //    public String patchStatusAgenda(AgendaRequestDTO agendaRequestDTO);

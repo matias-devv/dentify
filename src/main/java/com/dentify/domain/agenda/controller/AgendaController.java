@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,11 +27,10 @@ public class AgendaController {
         return ResponseEntity.status(HttpStatus.CREATED).body( agendaService.save(request, username)) ;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<List<CreateAgendaResponse>> getAgendasByDentist(@AuthenticationPrincipal String username,
-                                                                          @PathVariable Long id) {
+    @GetMapping("/find/by-clinic")
+    public ResponseEntity<List<CreateAgendaResponse>> getAgendasByClinic(@AuthenticationPrincipal String username) {
 
-        List<CreateAgendaResponse> response = agendaService.findAgendasByDentist( id, username );
+        List<CreateAgendaResponse> response = agendaService.findAgendasByClinic( username );
         return ResponseEntity.ok(response);
     }
 //

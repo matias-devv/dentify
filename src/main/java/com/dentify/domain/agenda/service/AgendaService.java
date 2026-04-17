@@ -4,10 +4,13 @@ import com.dentify.domain.agenda.dto.request.CreateAgendaRequest;
 import com.dentify.domain.agenda.dto.response.CreateAgendaResponse;
 import com.dentify.domain.agenda.model.Agenda;
 import com.dentify.domain.agenda.repository.IAgendaRepository;
+import com.dentify.domain.clinic.model.Clinic;
+import com.dentify.domain.clinic.service.IClinicService;
 import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
 import com.dentify.domain.schedule.model.Schedule;
 import com.dentify.domain.schedule.service.IScheduleService;
+import com.dentify.domain.userProfile.service.IUserProfileService;
 import com.dentify.exception.agenda.*;
 import com.dentify.domain.product.service.IProductService;
 import com.dentify.exception.schedule.InvalidScheduleTimeException;
@@ -32,6 +35,7 @@ public class AgendaService implements IAgendaService {
     private final IDentistService dentistService;
     private final IProductService productService;
     private final IScheduleService scheduleService;
+    private final IUserProfileService userProfileService;
 
     //mappers
     private final AgendaMapper agendaMapper;
@@ -192,6 +196,18 @@ public class AgendaService implements IAgendaService {
 
         return agendas.stream()
                       .map(agendaMapper::createAgendaResponse)
+                      .toList();
+    }
+
+    @Override
+    public List<CreateAgendaResponse> findAgendasByClinic(String username) {
+
+        Clinic clinic = userProfileService.findClinicByAuthUserUsername(username);
+
+        List<Agenda> agendas = agendaRepository.findAgendasByClinicId( clinic.getId() );
+
+        return agendas.stream()
+                      .map( agendaMapper::createAgendaResponse)
                       .toList();
     }
 
