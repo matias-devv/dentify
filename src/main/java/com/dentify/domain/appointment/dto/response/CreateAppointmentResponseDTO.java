@@ -1,8 +1,8 @@
 package com.dentify.domain.appointment.dto.response;
 
 import com.dentify.domain.appointment.enums.AppointmentStatus;
-import com.dentify.domain.pay.enums.PaymentMethod;
-import com.dentify.domain.pay.enums.PaymentStatus;
+import com.dentify.domain.payment.enums.PaymentMethod;
+import com.dentify.domain.payment.enums.PaymentStatus;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -11,7 +11,6 @@ import java.time.LocalTime;
 
 @Builder
 public record CreateAppointmentResponseDTO(Long id_appointment,
-                                           Long id_treatment,
                                            Long id_pay,
 
                                            // Appointment info

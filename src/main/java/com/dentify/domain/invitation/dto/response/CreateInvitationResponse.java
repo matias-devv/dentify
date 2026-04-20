@@ -1,4 +1,12 @@
-package com.dentify.domain.invitation.dto;
+package com.dentify.domain.invitation.dto.response;
 
-public class CreateInvitationResponse {
+import com.dentify.domain.invitation.enums.InvitationStatus;
+import com.dentify.domain.invitation.enums.InvitedRole;
+
+public record CreateInvitationResponse(Long id,
+                                       String email,
+                                       InvitedRole invitedRole,
+                                       String invitedBy,         // name of the inviter
+                                       InvitationStatus status,
+                                       String expiresAt) {
 }

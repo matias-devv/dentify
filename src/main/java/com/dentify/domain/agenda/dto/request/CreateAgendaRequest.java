@@ -24,7 +24,6 @@ public record CreateAgendaRequest(@NotBlank(message = "the agenda name is requir
                                   @NotNull(message = "active flag is required")
                                   Boolean active,
 
-                                  @NotNull(message = "idDentist is required")
                                   Long idDentist,
 
                                   Long idProduct, // nullable: schedule with no assigned product
