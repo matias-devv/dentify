@@ -1,5 +1,7 @@
 package com.dentify.domain.patient.enums;
 
+import jakarta.validation.constraints.NotNull;
+
 public enum CoverageType {
 
     SELF_PAY,          // No medical coverage
@@ -12,4 +14,12 @@ public enum CoverageType {
                        // Prepared for agreements or co-payments
 
     OTHER              // Exceptional/unclassified cases
+    ;
+
+    public static boolean isInvalid(@NotNull CoverageType coverageType) {
+        return !coverageType.equals(CoverageType.SELF_PAY) &&
+               !coverageType.equals(CoverageType.HEALTH_INSURANCE) &&
+               !coverageType.equals(CoverageType.PREPAID_INSURANCE) &&
+               !coverageType.equals(CoverageType.OTHER) ;
+    }
 }
