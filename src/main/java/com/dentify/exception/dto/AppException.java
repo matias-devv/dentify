@@ -1,4 +1,4 @@
-package com.dentify.domain.exception.dto;
+package com.dentify.exception.dto;
 
 public interface AppException {
     String getErrorCode();
