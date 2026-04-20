@@ -19,11 +19,18 @@ import java.util.Locale;
 public class CalendarMapper {
 
     public MonthResponse buildMonthResponse(Agenda agenda, YearMonth yearMonth, List<DailySummaryResponse> days) {
+
+        String nameProduct = "";
+
+        if ( agenda.getProduct() != null ){
+            nameProduct = agenda.getProduct().getNameProduct();
+        }
+
         return new MonthResponse(agenda.getId_agenda(),
                 yearMonth.getYear(),
                 yearMonth.getMonth().getValue(),
                 yearMonth.getMonth().getDisplayName(TextStyle.FULL, new Locale("es")),
-                agenda.getProduct().getName_product(),
+                nameProduct,
                 agenda.getDuration_minutes(),
                 days);
     }
@@ -38,12 +45,20 @@ public class CalendarMapper {
 
     public DetailedDayResponse buildDetailedDayResponse(Agenda agenda, List<DetailedSlotResponse> slots, LocalDate requestedDate,
                                                          Integer totalSlots, Integer freeSlots, Integer occupiedSlots, String message) {
+        Long idProduct = null;
+        String nameProduct = "";
+
+        if ( agenda.getProduct() != null ){
+            idProduct = agenda.getProduct().getId_product();
+            nameProduct = agenda.getProduct().getNameProduct();
+        }
+
         return new DetailedDayResponse(agenda.getId_agenda(),
-                agenda.getProduct().getId_product(),
+                idProduct,
                 requestedDate,
                 requestedDate.getDayOfWeek(),
                 agenda.getDuration_minutes(),
-                agenda.getProduct().getName_product(),
+                nameProduct,
                 totalSlots,
                 freeSlots,
                 occupiedSlots,
