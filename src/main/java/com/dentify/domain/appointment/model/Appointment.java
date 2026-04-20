@@ -47,7 +47,7 @@ public class Appointment {
     private String reason_for_cancellation;
 
     @Column(name = "attendance_confirmed")
-    private Boolean attendanceConfirmed = false;
+    private Boolean attendanceConfirmed;
 
     private LocalDateTime confirmed_at;
     private LocalDateTime cancelled_at;
@@ -163,4 +163,6 @@ public class Appointment {
     public boolean isWalkInPending() {
         return this.appointmentStatus == AppointmentStatus.WALK_IN_PENDING;
     }
+
+    public boolean isCompleted() { return this.appointmentStatus == AppointmentStatus.COMPLETED; }
 }
