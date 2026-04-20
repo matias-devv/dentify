@@ -4,59 +4,67 @@ import com.dentify.domain.userProfile.dto.request.UpdateUserProfileRequest;
 import com.dentify.domain.userProfile.dto.response.UserProfileResponse;
 import com.dentify.domain.userProfile.dto.response.UserSummaryResponse;
 import com.dentify.domain.userProfile.model.UserProfile;
-import com.dentify.security.dto.request.RegisterUserRequest;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.dentify.security.model.AuthUser;
+import com.dentify.security.model.Role;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class UserAppMapper {
+public class UserProfileMapper {
 
-    public UserProfileResponse buildUserProfileResponse(UserDetails userDetails, UserProfile userProfile){
+    public UserProfileResponse buildUserProfileResponse(AuthUser authUser, UserProfile userProfile){
 
         List<String> rolesList = new ArrayList<>();
 
-        for (GrantedAuthority grantedAuthority : userDetails.getAuthorities()) {
-
-            if ( grantedAuthority.getAuthority().startsWith("ROLE_")) {
-
-                rolesList.add( grantedAuthority.getAuthority());
-            }
+        for (Role role : authUser.getRoles()) {
+                rolesList.add( role.getRoleName() );
         }
 
-        return new UserProfileResponse( userProfile.getId_app_user(),
+        return new UserProfileResponse( userProfile.getId(),
                                         userProfile.getName(),
                                         userProfile.getSurname(),
-                                        userProfile.getClinic_name(),
+                                        userProfile.getClinic().getName(),
+                                        userProfile.getClinic().getId(),
                                         userProfile.getDni(),
                                         userProfile.getPhone_number(),
                                         rolesList);
     }
 
-    public UserProfile setAttributesToAppUser(RegisterUserRequest request) {
-        UserProfile userProfile = new UserProfile();
-        userProfile.setName(request.name());
-        userProfile.setSurname(request.surname());
-        userProfile.setDni(request.dni());
-        userProfile.setPhone_number(request.phone_number());
-        return userProfile;
-    }
-
-    public UserProfile setAttributesToUpdateAppUser(UpdateUserProfileRequest request, UserProfile userProfile) {
+    public UserProfile setAttributesToUpdateUserProfile(UpdateUserProfileRequest request, UserProfile userProfile) {
         userProfile.setName(request.name());
         userProfile.setSurname(request.surname());
         userProfile.setPhone_number(request.phone_number());
-        userProfile.setClinic_name(request.clinic_name());
+        userProfile.setUpdatedAt(LocalDateTime.now());
         return userProfile;
     }
 
     public UserSummaryResponse buildUserSummaryResponse(UserProfile userProfile) {
-        return new UserSummaryResponse(userProfile.getId_app_user(),
+        return new UserSummaryResponse(userProfile.getId(),
                                        userProfile.getName(),
                                        userProfile.getSurname(),
-                                       userProfile.getSpecialities().stream().findFirst().get().getName() );
+                                       userProfile.getDentist().getSpecialities().stream().findFirst().get().getName() );
+    }
+
+    public UserProfile buildUserProfile(String name, String surname, String phone, String dni) {
+        return UserProfile.builder()
+                .name(name)
+                .surname(surname)
+                .phone_number( phone)
+                .dni( dni)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    public UserProfile buildPlatformUserProfile() {
+        return UserProfile.builder()
+                .name("Matias")
+                .surname("Rodriguez")
+                .phone_number( "1122334455")
+                .dni("11.111.111")
+                .createdAt(LocalDateTime.now())
+                .build();
     }
 }
