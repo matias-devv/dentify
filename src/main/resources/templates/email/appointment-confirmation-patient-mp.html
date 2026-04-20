@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>Tu turno está reservado — completá el pago</title>
+    <!--[if mso]>
+    <noscript><xml><o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings></xml></noscript>
+    <![endif]-->
+    <style>
+        /* ─── Client resets ────────────────────────────────────────────── */
+        body, #bodyTable { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        img { border: 0; display: block; max-width: 100%; -ms-interpolation-mode: bicubic; }
+        a { color: inherit; }
+        #outlook a { padding: 0; }
+        .ReadMsgBody, .ExternalClass { width: 100%; }
+        .ExternalClass, .ExternalClass p, .ExternalClass span,
+        .ExternalClass font, .ExternalClass td, .ExternalClass div { line-height: 100%; }
+        table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+
+        /* ─── Responsive ────────────────────────────────────────────────── */
+        @media only screen and (max-width: 620px) {
+          .email-shell   { width: 100% !important; }
+
+          .header-cell   { padding: 18px 20px !important; }
+          .hero-cell     { padding: 32px 20px 28px !important; }
+          .content-cell  { padding: 28px 20px !important; }
+          .second-cta    { padding: 36px 20px !important; }
+          .footer-cell   { padding: 24px 20px !important; }
+
+          .h1  { font-size: 26px !important; }
+          .h2  { font-size: 20px !important; }
+
+          /* CTA buttons go full-width */
+          .btn-td   { display: block !important; width: 100% !important;
+                      border-radius: 12px !important; }
+          .btn-link { display: block !important; width: 100% !important;
+                      text-align: center !important; padding: 16px 20px !important;
+                      border-radius: 12px !important; box-sizing: border-box !important; }
+
+          /* Trust icons stack */
+          .trust-td { display: block !important; width: 100% !important;
+                      padding-right: 0 !important; padding-bottom: 20px !important; }
+
+          /* Footer cols stack */
+          .footer-l { display: block !important; width: 100% !important;
+                      padding-right: 0 !important; padding-bottom: 16px !important; }
+          .footer-r { display: block !important; width: 100% !important;
+                      text-align: left !important; }
+
+          /* Eyebrow inline label hides on mobile */
+          .hide-sm  { display: none !important; }
+
+          /* Date/time big nums */
+          .big-num  { font-size: 20px !important; }
+        }
+    </style>
+</head>
+
+<body style="margin:0;padding:0;background-color:#e8edf4;
+             -webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+
+<!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"
+                         width="100%" style="background-color:#e8edf4;"><tr><td><![endif]-->
+
+<!-- ═══ OUTER WRAPPER ════════════════════════════════════════════════ -->
+<table role="presentation" border="0" cellpadding="0" cellspacing="0"
+       width="100%" style="background-color:#e8edf4;">
+    <tr>
+        <td align="center" style="padding:32px 12px 48px;">
+
+            <!-- ═══ EMAIL SHELL ══════════════════════════════════════════════ -->
+            <table class="email-shell" role="presentation" border="0" cellpadding="0"
+                   cellspacing="0" width="600" style="max-width:600px;width:100%;">
+
+
+                <!-- ╔══════════════════════════════════════════════════════════╗
+                     ║  HEADER                                                 ║
+                     ╚══════════════════════════════════════════════════════════╝ -->
+                <tr>
+                    <td style="border-radius:16px 16px 0 0;overflow:hidden;
+                     background-color:#0c1a36;">
+                        <table role="presentation" border="0" cellpadding="0"
+                               cellspacing="0" width="100%">
+                            <tr>
+                                <td class="header-cell"
+                                    style="padding:20px 36px;
+                           border-bottom:1px solid rgba(255,255,255,0.07);">
+                                    <table role="presentation" border="0" cellpadding="0"
+                                           cellspacing="0" width="100%">
+                                        <tr>
+                                            <!-- Logo -->
+                                            <td>
+                                                <img th:if="${clinicLogoUrl != null and !#strings.isEmpty(clinicLogoUrl)}"
+                                                     th:src="${clinicLogoUrl}"
+                                                     alt="Dentify"
+                                                     height="34"
+                                                     style="height:34px;max-height:34px;display:block;" />
+                                                <!-- Wordmark fallback -->
+                                                <table th:unless="${clinicLogoUrl != null and !#strings.isEmpty(clinicLogoUrl)}"
+                                                       role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                                    <tr>
+                                                        <td style="font-family:Georgia,'Times New Roman',serif;
+                                       font-size:19px;font-weight:normal;
+                                       color:#ffffff;letter-spacing:0.05em;">
+                                                            Dentify
+                                                        </td>
+                                                        <td style="padding-left:8px;vertical-align:middle;">
+                              <span style="font-family:'Helvetica Neue',Arial,sans-serif;
+                                          font-size:9px;font-weight:700;
+                                          letter-spacing:0.18em;text-transform:uppercase;
+                                          color:rgba(255,255,255,0.35);">PLATFORM</span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <!-- Right label -->
+                                            <td align="right" class="hide-sm"
+                                                style="font-family:'Helvetica Neue',Arial,sans-serif;
+                                 font-size:9px;font-weight:700;
+                                 letter-spacing:0.16em;text-transform:uppercase;
+                                 color:rgba(255,255,255,0.3);white-space:nowrap;">
+                                                CONFIRMACIÓN OFICIAL
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+
+                <!-- ╔══════════════════════════════════════════════════════════╗
+                     ║  HERO — primary CTA above the fold                     ║
+                     ╚══════════════════════════════════════════════════════════╝ -->
+                <tr>
+                    <td class="hero-cell"
+                        style="background-color:#0c1a36;
+                     background-image:linear-gradient(155deg,#0c1a36 0%,#112850 55%,#0c2060 100%);
+                     padding:44px 36px 36px;">
+
+                        <!-- Eyebrow pill -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="background-color:rgba(30,120,255,0.15);
+                           border:1px solid rgba(80,150,255,0.3);
+                           border-radius:100px;padding:5px 14px;
+                           font-family:'Helvetica Neue',Arial,sans-serif;
+                           font-size:10px;font-weight:700;
+                           letter-spacing:0.12em;text-transform:uppercase;
+                           color:#80b4ff;">
+                                    &#9679;&nbsp;&nbsp;PAGO PENDIENTE
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- 18px spacer -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr><td style="height:18px;line-height:18px;font-size:18px;">&nbsp;</td></tr>
+                        </table>
+
+                        <!-- Headline -->
+                        <h1 class="h1"
+                            style="margin:0;font-family:Georgia,'Times New Roman',serif;
+                       font-size:34px;font-weight:normal;line-height:1.18;
+                       color:#ffffff;letter-spacing:-0.5px;">
+                            Tu turno está<br/>reservado.
+                        </h1>
+
+                        <!-- 14px spacer -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr><td style="height:14px;line-height:14px;font-size:14px;">&nbsp;</td></tr>
+                        </table>
+
+                        <!-- Subtext -->
+                        <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                      font-size:15px;line-height:1.6;color:rgba(255,255,255,0.68);
+                      max-width:420px;">
+                            Solo falta un paso: completá el pago a través de
+                            <strong style="color:#ffffff;font-weight:700;">Mercado Pago</strong>
+                            para que tu turno quede confirmado definitivamente.
+                        </p>
+
+                        <!-- 32px spacer -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr><td style="height:32px;line-height:32px;font-size:32px;">&nbsp;</td></tr>
+                        </table>
+
+                        <!-- ── PRIMARY BUTTON ── -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td class="btn-td"
+                                    style="border-radius:12px;
+                           background-color:#1d6ff0;
+                           background-image:linear-gradient(135deg,#2176ff 0%,#1a5ccc 100%);
+                           box-shadow:0 6px 24px rgba(30,110,240,0.45);">
+                                    <a th:href="${paymentLink}"
+                                       href="#"
+                                       class="btn-link"
+                                       target="_blank"
+                                       style="display:inline-block;padding:16px 44px;
+                            font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:16px;font-weight:700;
+                            color:#ffffff !important;text-decoration:none;
+                            letter-spacing:0.01em;border-radius:12px;
+                            mso-padding-alt:0;">
+                                        Pagar turno ahora
+                                    </a>
+                                </td>
+                                <td class="hide-sm"
+                                    style="padding-left:16px;vertical-align:middle;
+                           font-family:'Helvetica Neue',Arial,sans-serif;
+                           font-size:12px;color:rgba(255,255,255,0.38);
+                           white-space:nowrap;">
+                                    Pago seguro &#128274;
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- 10px spacer -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr><td style="height:10px;line-height:10px;font-size:10px;">&nbsp;</td></tr>
+                        </table>
+
+                        <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                      font-size:11px;color:rgba(255,255,255,0.3);">
+                            Tarjeta, dinero en cuenta o cuotas sin interés.
+                        </p>
+
+                    </td>
+                </tr>
+
+
+                <!-- ╔══════════════════════════════════════════════════════════╗
+                     ║  APPOINTMENT DETAIL CARD                               ║
+                     ╚══════════════════════════════════════════════════════════╝ -->
+                <tr>
+                    <td class="content-cell"
+                        style="background-color:#ffffff;padding:36px 36px 28px;">
+
+                        <!-- Section eyebrow -->
+                        <p style="margin:0 0 16px;font-family:'Helvetica Neue',Arial,sans-serif;
+                      font-size:10px;font-weight:700;letter-spacing:0.14em;
+                      text-transform:uppercase;color:#94a3b8;">
+                            DETALLE DEL TURNO
+                        </p>
+
+                        <!-- Card shell -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"
+                               width="100%"
+                               style="background-color:#f8fafc;border-radius:12px;
+                          border-left:4px solid #2176ff;
+                          border-top:1px solid #e2e8f0;
+                          border-right:1px solid #e2e8f0;
+                          border-bottom:1px solid #e2e8f0;">
+                            <tr>
+                                <td style="padding:24px 24px 8px;">
+
+                                    <!-- Date + Time row -->
+                                    <table role="presentation" border="0" cellpadding="0"
+                                           cellspacing="0" width="100%">
+                                        <tr>
+                                            <td width="50%" valign="top" style="padding-bottom:20px;">
+                                                <p style="margin:0 0 4px;
+                                  font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:10px;font-weight:700;
+                                  letter-spacing:0.1em;text-transform:uppercase;
+                                  color:#94a3b8;">FECHA</p>
+                                                <p class="big-num" th:text="${appointmentDate}"
+                                                   style="margin:0;font-family:Georgia,'Times New Roman',serif;
+                                  font-size:24px;color:#0c1a36;font-weight:normal;">
+                                                    01/01/2025
+                                                </p>
+                                            </td>
+                                            <td width="50%" valign="top" style="padding-bottom:20px;">
+                                                <p style="margin:0 0 4px;
+                                  font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:10px;font-weight:700;
+                                  letter-spacing:0.1em;text-transform:uppercase;
+                                  color:#94a3b8;">HORA</p>
+                                                <p class="big-num" th:text="${appointmentTime}"
+                                                   style="margin:0;font-family:Georgia,'Times New Roman',serif;
+                                  font-size:24px;color:#1d6ff0;font-weight:normal;">
+                                                    10:00
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <!-- Divider -->
+                                    <table role="presentation" border="0" cellpadding="0"
+                                           cellspacing="0" width="100%">
+                                        <tr>
+                                            <td style="border-top:1px solid #e2e8f0;
+                                 padding-bottom:20px;"></td>
+                                        </tr>
+                                    </table>
+
+                                    <!-- Remaining detail rows -->
+                                    <table role="presentation" border="0" cellpadding="0"
+                                           cellspacing="0" width="100%">
+
+                                        <tr>
+                                            <td width="36%" valign="top" style="padding-bottom:14px;">
+                                                <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:11px;font-weight:700;
+                                  letter-spacing:0.08em;text-transform:uppercase;
+                                  color:#94a3b8;">Tratamiento</p>
+                                            </td>
+                                            <td valign="top" style="padding-bottom:14px;">
+                                                <p th:text="${treatmentName}"
+                                                   style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:14px;font-weight:500;color:#0f172a;">
+                                                    Consulta general
+                                                </p>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td width="36%" valign="top" style="padding-bottom:14px;">
+                                                <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:11px;font-weight:700;
+                                  letter-spacing:0.08em;text-transform:uppercase;
+                                  color:#94a3b8;">Duración</p>
+                                            </td>
+                                            <td valign="top" style="padding-bottom:14px;">
+                                                <p th:text="${duration}"
+                                                   style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:14px;font-weight:500;color:#0f172a;">
+                                                    30 minutos
+                                                </p>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td width="36%" valign="top" style="padding-bottom:14px;">
+                                                <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:11px;font-weight:700;
+                                  letter-spacing:0.08em;text-transform:uppercase;
+                                  color:#94a3b8;">Profesional</p>
+                                            </td>
+                                            <td valign="top" style="padding-bottom:14px;">
+                                                <p th:text="${dentistName}"
+                                                   style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:14px;font-weight:500;color:#0f172a;">
+                                                    Dr. Nombre Apellido
+                                                </p>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td width="36%" valign="top" style="padding-bottom:16px;">
+                                                <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:11px;font-weight:700;
+                                  letter-spacing:0.08em;text-transform:uppercase;
+                                  color:#94a3b8;">N° de turno</p>
+                                            </td>
+                                            <td valign="top" style="padding-bottom:16px;">
+                                                <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:14px;font-weight:500;color:#64748b;">
+                                                    #<span th:text="${appointmentId}">0000</span>
+                                                </p>
+                                            </td>
+                                        </tr>
+
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+
+                <!-- ╔══════════════════════════════════════════════════════════╗
+                     ║  PATIENT INSTRUCTIONS                                   ║
+                     ╚══════════════════════════════════════════════════════════╝ -->
+                <tr>
+                    <td style="background-color:#ffffff;padding:0 36px 28px;">
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"
+                               width="100%"
+                               style="background-color:#fffbeb;border-radius:10px;
+                          border:1px solid #fde68a;">
+                            <tr>
+                                <td style="padding:16px 20px;">
+                                    <table role="presentation" border="0" cellpadding="0"
+                                           cellspacing="0" width="100%">
+                                        <tr>
+                                            <td width="28" valign="top"
+                                                style="font-size:18px;line-height:1.4;
+                                 padding-right:12px;">&#128203;</td>
+                                            <td>
+                                                <p style="margin:0 0 4px;
+                                  font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:11px;font-weight:700;
+                                  letter-spacing:0.08em;text-transform:uppercase;
+                                  color:#92400e;">Indicaciones para el turno</p>
+                                                <p th:text="${patientInstructions}"
+                                                   style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                                  font-size:13px;line-height:1.55;color:#78350f;">
+                                                    Llegar 20 minutos antes de la hora del turno.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+
+                <!-- ╔══════════════════════════════════════════════════════════╗
+                     ║  TRUST BLOCK                                            ║
+                     ╚══════════════════════════════════════════════════════════╝ -->
+                <tr>
+                    <td class="content-cell"
+                        style="background-color:#ffffff;padding:4px 36px 36px;">
+
+                        <!-- Hairline divider -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr><td style="border-top:1px solid #e2e8f0;padding-bottom:28px;"></td></tr>
+                        </table>
+
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr>
+
+                                <td class="trust-td" width="33%" valign="top"
+                                    style="text-align:center;padding-right:12px;">
+                                    <p style="margin:0 0 8px;font-size:22px;line-height:1;">&#128274;</p>
+                                    <p style="margin:0 0 4px;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:12px;font-weight:700;color:#0f172a;">Pago seguro</p>
+                                    <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:12px;line-height:1.5;color:#64748b;">
+                                        Encriptación SSL en todo momento
+                                    </p>
+                                </td>
+
+                                <td class="trust-td" width="33%" valign="top"
+                                    style="text-align:center;padding-right:12px;">
+                                    <p style="margin:0 0 8px;font-size:22px;line-height:1;">&#128179;</p>
+                                    <p style="margin:0 0 4px;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:12px;font-weight:700;color:#0f172a;">Múltiples métodos</p>
+                                    <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:12px;line-height:1.5;color:#64748b;">
+                                        Tarjeta, cuenta o cuotas sin interés
+                                    </p>
+                                </td>
+
+                                <td class="trust-td" width="33%" valign="top"
+                                    style="text-align:center;">
+                                    <p style="margin:0 0 8px;font-size:22px;line-height:1;">&#9989;</p>
+                                    <p style="margin:0 0 4px;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:12px;font-weight:700;color:#0f172a;">Confirmación inmediata</p>
+                                    <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:12px;line-height:1.5;color:#64748b;">
+                                        Tu turno se confirma al instante
+                                    </p>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+
+                <!-- ╔══════════════════════════════════════════════════════════╗
+                     ║  SECOND CTA — dark section, repeated for scroll depth  ║
+                     ╚══════════════════════════════════════════════════════════╝ -->
+                <tr>
+                    <td class="second-cta"
+                        style="background-color:#0c1a36;
+                     background-image:linear-gradient(135deg,#0c1a36 0%,#112850 100%);
+                     padding:40px 36px;text-align:center;">
+
+                        <h2 class="h2"
+                            style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;
+                       font-size:24px;font-weight:normal;color:#ffffff;
+                       letter-spacing:-0.2px;">
+                            Completá el pago y listo.
+                        </h2>
+
+                        <p style="margin:0 auto 28px;font-family:'Helvetica Neue',Arial,sans-serif;
+                      font-size:13px;line-height:1.6;color:rgba(255,255,255,0.55);
+                      max-width:380px;">
+                            Una vez realizado el pago, recibirás la confirmación
+                            final de tu turno. Si el link expiró, contactate con la clínica.
+                        </p>
+
+                        <!-- Second CTA button — pill style -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0"
+                               align="center" style="margin:0 auto;">
+                            <tr>
+                                <td class="btn-td"
+                                    style="border-radius:100px;
+                           background-color:#1d6ff0;
+                           background-image:linear-gradient(135deg,#2176ff 0%,#1a5ccc 100%);
+                           box-shadow:0 6px 20px rgba(30,110,240,0.5);">
+                                    <a th:href="${paymentLink}"
+                                       href="#"
+                                       class="btn-link"
+                                       target="_blank"
+                                       style="display:inline-block;padding:15px 44px;
+                            font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:15px;font-weight:700;
+                            color:#ffffff !important;text-decoration:none;
+                            letter-spacing:0.02em;border-radius:100px;
+                            mso-padding-alt:0;">
+                                        Pagar turno ahora
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- 20px spacer -->
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tr><td style="height:20px;line-height:20px;font-size:20px;">&nbsp;</td></tr>
+                        </table>
+
+                        <!-- Plain-text link fallback -->
+                        <p style="margin:0 0 4px;font-family:'Helvetica Neue',Arial,sans-serif;
+                      font-size:11px;color:rgba(255,255,255,0.3);">
+                            O copiá este link en tu navegador:
+                        </p>
+                        <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                      font-size:11px;word-break:break-all;">
+                            <a th:href="${paymentLink}"
+                               th:text="${paymentLink}"
+                               href="#"
+                               style="color:#80b4ff;text-decoration:underline;">
+                                https://www.mercadopago.com.ar/...
+                            </a>
+                        </p>
+
+                    </td>
+                </tr>
+
+
+                <!-- ╔══════════════════════════════════════════════════════════╗
+                     ║  FOOTER                                                 ║
+                     ╚══════════════════════════════════════════════════════════╝ -->
+                <tr>
+                    <td class="footer-cell"
+                        style="background-color:#f1f5f9;border-radius:0 0 16px 16px;
+                     border-top:1px solid #e2e8f0;padding:28px 36px;">
+
+                        <table role="presentation" border="0" cellpadding="0"
+                               cellspacing="0" width="100%">
+                            <tr>
+
+                                <!-- Left: clinic identity + contact -->
+                                <td class="footer-l" width="55%" valign="top"
+                                    style="padding-right:20px;">
+                                    <p style="margin:0 0 2px;
+                            font-family:Georgia,'Times New Roman',serif;
+                            font-size:15px;font-weight:normal;
+                            color:#0c1a36;letter-spacing:0.04em;">
+                                        Dentify
+                                    </p>
+                                    <p style="margin:0 0 10px;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:11px;color:#94a3b8;">
+                                        Plataforma de gestión odontológica
+                                    </p>
+                                    <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:12px;color:#64748b;line-height:1.8;">
+                                        <a th:href="'mailto:' + ${clinicEmail}"
+                                           th:text="${clinicEmail}"
+                                           style="color:#1d6ff0;text-decoration:none;">
+                                            clinica@ejemplo.com
+                                        </a><br/>
+                                        <a th:href="'https://wa.me/' + ${#strings.replace(clinicaWhatsApp, '+', '')}"
+                                           th:text="${clinicaWhatsApp}"
+                                           target="_blank"
+                                           style="color:#64748b;text-decoration:none;">
+                                            +54 9 11 0000 0000
+                                        </a>
+                                    </p>
+                                </td>
+
+                                <!-- Right: copyright + disclaimer -->
+                                <td class="footer-r" valign="top" align="right">
+                                    <p style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:11px;color:#94a3b8;line-height:1.6;">
+                                        &copy; <span th:text="${currentYear}">2025</span>
+                                        <span th:text="${clinicName}">Clínica Dental</span>.<br/>
+                                        Todos los derechos reservados.
+                                    </p>
+                                    <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;
+                            font-size:11px;color:#b0bec5;line-height:1.6;">
+                                        Este mensaje fue generado<br/>automáticamente.
+                                        No responder.
+                                    </p>
+                                </td>
+
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- Bottom spacer -->
+                <tr>
+                    <td style="height:24px;line-height:24px;font-size:24px;">&nbsp;</td>
+                </tr>
+
+            </table>
+            <!-- /email-shell -->
+
+        </td>
+    </tr>
+</table>
+<!-- /outer-wrapper -->
+
+<!--[if mso | IE]></td></tr></table><![endif]-->
+
+</body>
+</html>
