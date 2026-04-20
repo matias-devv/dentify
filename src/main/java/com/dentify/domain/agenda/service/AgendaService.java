@@ -5,7 +5,6 @@ import com.dentify.domain.agenda.dto.response.CreateAgendaResponse;
 import com.dentify.domain.agenda.model.Agenda;
 import com.dentify.domain.agenda.repository.IAgendaRepository;
 import com.dentify.domain.clinic.model.Clinic;
-import com.dentify.domain.clinic.service.IClinicService;
 import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
 import com.dentify.domain.schedule.model.Schedule;
@@ -188,9 +187,9 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public List<CreateAgendaResponse> findAgendasByDentist(Long id, String username) {
+    public List<CreateAgendaResponse> findAgendasByDentist(String username) {
 
-        Dentist dentist = dentistService.resolveDentist(  id, username);
+        Dentist dentist = dentistService.findDentistByAuthUserUsername( username);
 
         List<Agenda> agendas = agendaRepository.findByDentistIdWithSchedules( dentist.getId() );
 
