@@ -1,33 +1,36 @@
 package com.dentify.mapper;
 
+import com.dentify.dashboard.dto.CancelledDetailResponse;
+import com.dentify.dashboard.dto.CancelledTodayResponse;
 import com.dentify.dashboard.dto.DashboardAlert;
 import com.dentify.dashboard.enums.DashboardAlertType;
 import com.dentify.domain.appointment.model.Appointment;
-import com.dentify.domain.pay.model.Pay;
+import com.dentify.domain.payment.model.TreatmentPayment;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Component
 public class DashboardMapper {
 
-    public DashboardAlert buildPendingPayAlert(Pay pay) {
+    public DashboardAlert buildPendingPayAlert(TreatmentPayment payment) {
 
         return new DashboardAlert(DashboardAlertType.PAYMENT_PENDING,
-                pay.getId_pay(),
-                pay.getAppointment().getPatient().getName(),
-                pay.getAppointment().getPatient().getSurname(),
-                pay.getAppointment().getAppointmentDate().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
-                "Pago pendiente de " + pay.getAmount() + " — sin confirmar");
+                payment.getId_pay(),
+                payment.getAppointment().getPatient().getName(),
+                payment.getAppointment().getPatient().getSurname(),
+                payment.getAppointment().getAppointmentStart().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                "Pago pendiente de " + payment.getAmount() + " — sin confirmar");
     }
 
-    public DashboardAlert buildPartialPayAlert(Pay pay) {
+    public DashboardAlert buildPartialPayAlert(TreatmentPayment payment) {
         return new DashboardAlert(DashboardAlertType.PARTIAL_PAYMENT,
-                pay.getId_pay(),
-                pay.getAppointment().getPatient().getName(),
-                pay.getAppointment().getPatient().getSurname(),
-                pay.getAppointment().getAppointmentDate().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
-                "Pago parcial — saldo restante " + pay.getTreatment().getOutstanding_balance());
+                payment.getId_pay(),
+                payment.getAppointment().getPatient().getName(),
+                payment.getAppointment().getPatient().getSurname(),
+                payment.getAppointment().getAppointmentStart().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                "Pago parcial — saldo restante " + payment.getTreatment().getOutstanding_balance());
     }
 
     public DashboardAlert buildAbandonedTreatment(Appointment a) {
@@ -40,7 +43,7 @@ public class DashboardMapper {
                 a.getId_appointment(),
                 a.getPatient().getName(),
                 a.getPatient().getSurname(),
-                a.getAppointmentDate().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                a.getAppointmentStart().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
                 "Tratamiento con " + absences + " ausencias previas — en estado Abandonado");
     }
 
@@ -49,8 +52,24 @@ public class DashboardMapper {
                 a.getId_appointment(),
                 a.getPatient().getName(),
                 a.getPatient().getSurname(),
-                a.getAppointmentDate().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                a.getAppointmentStart().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
                 "No confirmo el turno");
     }
 
+    public CancelledTodayResponse buildCancelledTodayResponse(List<CancelledDetailResponse> alerts) {
+        return new CancelledTodayResponse(alerts,
+                                          alerts.size());
+    }
+
+    public CancelledDetailResponse buildCancelledDetailResponse(Appointment a) {
+
+        return new CancelledDetailResponse(a.getId_appointment(),
+                                           a.getAppointmentStart().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                                           a.getPatient().getName(),
+                                           a.getPatient().getSurname(),
+                                           a.getAppointmentStatus().name(),
+                                           a.getReason_for_cancellation(),
+                                           a.getTreatment().getProduct().getNameProduct(),
+                                           a.getAppointmentStart() );
+    }
 }
