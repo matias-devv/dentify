@@ -27,10 +27,19 @@ public class AgendaController {
         return ResponseEntity.status(HttpStatus.CREATED).body( agendaService.save(request, username)) ;
     }
 
+    @PreAuthorize("hasAnyRole('DENTIST','SECRETARY')")
     @GetMapping("/find/by-clinic")
     public ResponseEntity<List<CreateAgendaResponse>> getAgendasByClinic(@AuthenticationPrincipal String username) {
 
         List<CreateAgendaResponse> response = agendaService.findAgendasByClinic( username );
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasAnyRole('DENTIST')")
+    @GetMapping("/find/by-dentist")
+    public ResponseEntity<List<CreateAgendaResponse>> getAgendasByDentist(@AuthenticationPrincipal String username) {
+
+        List<CreateAgendaResponse> response = agendaService.findAgendasByDentist( username );
         return ResponseEntity.ok(response);
     }
 //
