@@ -1,187 +1,150 @@
 package com.dentify.domain.userProfile.service;
 
-import com.dentify.common.util.JwtUtils;
-import com.dentify.domain.speciality.model.Speciality;
-import com.dentify.domain.speciality.service.ISpecialityService;
+import com.dentify.domain.clinic.model.Clinic;
+import com.dentify.domain.invitation.dto.request.AcceptInvitationRequest;
 import com.dentify.domain.userProfile.dto.request.UpdateUserProfileRequest;
 import com.dentify.domain.userProfile.dto.response.UserProfileResponse;
 import com.dentify.domain.userProfile.dto.response.UserSummaryResponse;
-import com.dentify.mapper.UserAppMapper;
+import com.dentify.exception.clinic.ClinicNotFoundException;
+import com.dentify.mapper.UserProfileMapper;
 import com.dentify.domain.userProfile.model.UserProfile;
-import com.dentify.domain.userProfile.repository.IAppUserRepository;
-import com.dentify.security.dto.request.RegisterUserRequest;
-import com.dentify.mapper.AuthUserMapper;
+import com.dentify.domain.userProfile.repository.IUserProfileRepository;
 import com.dentify.security.model.AuthUser;
-import com.dentify.security.model.Role;
-import com.dentify.security.repository.IAuthUserRepository;
-import com.dentify.security.service.IRoleService;
-import com.dentify.security.service.UserDetailsServiceImp;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class UserService implements IUserService {
+@Slf4j
+public class UserProfileService implements IUserProfileService {
 
-    private final IAppUserRepository appUserRepository;
-    private final IAuthUserRepository authUserRepository;
-    private final ISpecialityService specialityService;
-    private final IRoleService roleService;
-    private final JwtUtils jwtUtils;
-    private final UserDetailsServiceImp userDetailsService;
-    private final UserAppMapper userAppMapper;
-    private final AuthUserMapper authUserMapper;
-
-    //I assume that during login it validated whether the user existed before this method
-    @Override
-    public boolean saveUser(RegisterUserRequest request) {
-
-        UserProfile userProfile = userAppMapper.setAttributesToAppUser( request);
-        AuthUser authUser = authUserMapper.setAttributesToAuthUser(request);
-
-        if( request.id_speciality() != null) {
-            userProfile = this.setSpecialityToAppUser(userProfile, request.id_speciality());
-        }
-
-        authUser = this.setRolesToAuthUser( authUser, request.id_role() );
-        
-        appUserRepository.save(userProfile);
-
-        authUserRepository.save( authUser );
-
-        this.setRelationBetweenAppUserAndAuthUser(userProfile, authUser);
-
-        return true;
-    }
-
-    private void setRelationBetweenAppUserAndAuthUser(UserProfile userProfile, AuthUser authUser) {
-
-        authUser.setAppUser(userProfile);
-        userProfile.setAuth_user(authUser);
-
-        authUserRepository.save( authUser );
-        appUserRepository.save(userProfile);
-    }
-
-    private AuthUser setRolesToAuthUser(AuthUser authUser, Long idRole) {
-
-        Optional<Role> role = roleService.getRole(idRole);
-
-        if( role.isPresent() ) {
-
-            Set<Role> roles = authUser.getRoles();
-
-            if( !roles.contains( role.get() ) ) {
-
-                roles.add( role.get() );
-
-                authUser.setRoles( roles );
-            }
-        }
-        return authUser;
-    }
-
-    private UserProfile setSpecialityToAppUser(UserProfile userProfile, Long idSpeciality) {
-
-        Speciality speciality = specialityService.getSpecialityEntityById(idSpeciality);
-
-        if( speciality != null) {
-
-            Set<Speciality> specialities = userProfile.getSpecialities();
-
-            if( !specialities.contains( speciality ) ) {
-
-                specialities.add( speciality );
-
-                userProfile.setSpecialities( specialities );
-            }
-        }
-        return userProfile;
-    }
-
+    private final IUserProfileRepository userProfileRepository;
+    private final UserProfileMapper userProfileMapper;
 
     @Override
-    public UserProfile findUserAppEntityById(Long id) {
-        return appUserRepository.findById( id ).orElseThrow( () -> new RuntimeException("App User not found"));
+    public UserProfileResponse findMe( String username) {
+
+        UserProfile userProfile = this.findByAuthUsername( username );
+
+        return userProfileMapper.buildUserProfileResponse( userProfile.getAuthUser(), userProfile);
     }
 
-    @Override
-    public UserProfile validateIfUserExists(Long id_user_app) {
+    public UserProfile findByAuthUsername(String username) {
 
-        UserProfile userProfile = this.findUserAppEntityById(id_user_app);
-
-        if(userProfile == null) {
-            return null;
-        }
-        return userProfile;
-    }
-
-    @Override
-    public UserProfileResponse findMe( UserDetails userDetails) {
-
-        UserProfile userProfile = this.findUserAppEntityByUsername( userDetails.getUsername() );
-
-        return userAppMapper.buildUserProfileResponse( userDetails, userProfile);
-    }
-
-    public UserProfile findUserAppEntityByUsername(String username) {
-
-        Optional<UserProfile> appUser = appUserRepository.findByAuthUsername(username);
+        Optional<UserProfile> appUser = userProfileRepository.findByAuthUsername( username);
 
         if ( appUser.isPresent() ) {
             return appUser.get();
         }
         else{
-            throw new UsernameNotFoundException("There is no user associated with this username");
+            throw new UsernameNotFoundException( "There is no auth user associated with this username");
         }
     }
 
     @Override
-    public UserProfileResponse updateUserApp(UserDetails userDetails, UpdateUserProfileRequest request) {
+    public UserProfile findByAuthUsernameWithoutClinic(String username) {
 
-        UserProfile userProfile = this.findUserAppEntityByUsername(userDetails.getUsername());
+        Optional<UserProfile> appUser = userProfileRepository.findByAuthUsernameWithoutClinic( username);
 
-        userProfile = userAppMapper.setAttributesToUpdateAppUser(request, userProfile);
-
-        appUserRepository.save(userProfile);
-
-        return userAppMapper.buildUserProfileResponse(userDetails, userProfile);
+        if ( appUser.isPresent() ) {
+            return appUser.get();
+        }
+        else{
+            throw new UsernameNotFoundException( "There is no auth user associated with this username");
+        }
     }
 
     @Override
-    public List<UserSummaryResponse> getAllAppUserSummaryFromDentists() {
+    public Clinic findClinicByAuthUserUsername(String username) {
+        return userProfileRepository.findClinicByAuthUserUsername(username)
+                                    .orElseThrow( ()-> new ClinicNotFoundException("This user profile has no clinic associated"));
+    }
 
-        List<UserProfile> users = appUserRepository.findAllByRoleName("ROLE_DENTIST");
+    @Override
+    public UserProfile createUserProfileByInvitation( AcceptInvitationRequest request, Clinic clinic, AuthUser newAuthUser ) {
+
+        UserProfile newUserProfile = userProfileMapper.buildUserProfile( request.name(), request.surname(), request.phone(), request.dni() );
+
+        newUserProfile.setClinic( clinic);
+
+        newUserProfile.setAuthUser( newAuthUser);
+
+        this.persistUserProfile( newUserProfile);
+
+        return newUserProfile;
+    }
+
+    @Override
+    public void persistUserProfile(UserProfile newUserProfile) {
+        userProfileRepository.save( newUserProfile);
+    }
+
+    @Override
+    public UserProfile findByAuthUserUsernameWithClinic(String username) {
+        return userProfileRepository.findByAuthUserUsernameWithClinic( username)
+                                    .orElseThrow( ()-> new UsernameNotFoundException("The user with this email was not found"));
+    }
+
+    @Override
+    public UserProfileResponse updateUserProfile(String username, UpdateUserProfileRequest request) {
+
+        UserProfile userProfile = this.findByAuthUsername( username);
+
+        userProfile = userProfileMapper.setAttributesToUpdateUserProfile( request, userProfile);
+
+        userProfileRepository.save( userProfile);
+
+        return userProfileMapper.buildUserProfileResponse( userProfile.getAuthUser(), userProfile);
+    }
+
+    @Override
+    public List<UserSummaryResponse> getAllUserProfileSummaryFromDentists() {
+
+        List<UserProfile> users = userProfileRepository.findAllByRoleName("ROLE_DENTIST");
+
         List<UserSummaryResponse> responseList = new ArrayList<>();
 
         for (UserProfile userProfile : users) {
 
-            responseList.add( userAppMapper.buildUserSummaryResponse(userProfile) );
+            responseList.add( userProfileMapper.buildUserSummaryResponse(userProfile) );
         }
         return responseList;
     }
 
     @Override
-    public String deactiveAppUser(Long id) {
+    public String deactiveUserProfile(Long id) {
 
-        UserProfile userProfile = appUserRepository.findByIdWithAuthUser( id ).orElseThrow( () -> new RuntimeException("App User not found"));
+        UserProfile userProfile = userProfileRepository.findByIdWithAuthUser( id ).orElseThrow( () -> new RuntimeException("App User not found"));
 
-        userProfile.getAuth_user().setEnabled(false);
-        userProfile.getAuth_user().setAccountNotLocked(false);
+        userProfile.setUpdatedAt( LocalDateTime.now());
+
+        userProfile.getAuthUser().setEnabled( false);
+
+        userProfile.getAuthUser().setUpdatedAt( LocalDateTime.now());
+
+        userProfile.getAuthUser().setAccountNonLocked( false);
+
+        userProfileRepository.save( userProfile);
 
         return "The user was successfully deactivated";
     }
 
     @Override
-    public UserProfile findByIdWithAuthUser(Long id) {
-        return appUserRepository.findByIdWithAuthUser( id ).orElseThrow( () -> new RuntimeException("App User not found"));
+    public void createPlatformUserProfile(AuthUser newAdmin) {
+
+        UserProfile newUserProfile = userProfileMapper.buildPlatformUserProfile();
+
+        newUserProfile.setAuthUser(newAdmin);
+
+        userProfileRepository.save(newUserProfile);
     }
 
 }
