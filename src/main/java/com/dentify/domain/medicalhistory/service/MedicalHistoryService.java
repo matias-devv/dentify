@@ -6,14 +6,17 @@ import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
 import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
 import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.model.MedicalHistory;
 import com.dentify.domain.medicalhistory.repository.IMedicalHistoryRepository;
 import com.dentify.domain.patient.model.Patient;
 import com.dentify.domain.patient.service.IPatientService;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
 import com.dentify.exception.allergycatalog.AllergiesCatalogNotFoundException;
+import com.dentify.exception.patient.PatientNotFoundException;
 import com.dentify.mapper.MedicalHistoryMapper;
 import com.dentify.mapper.PatientAllergyMapper;
+import com.dentify.security.multitenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -84,5 +87,36 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
             throw new AllergiesCatalogNotFoundException("Some allergy ids were not found or are inactive: " + missingIds );
         }
+    }
+
+    @Override
+    public List<MedicalHistorySummaryResponse> findAllByPatient(Long patientId) {
+
+        validatePatientBelongsToTenant(patientId);
+
+        return medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(patientId)
+                                       .stream()
+                                       .map(this::toSummaryWithCounts)
+                                       .toList();
+    }
+
+    private void validatePatientBelongsToTenant(Long patientId) {
+
+        String patientTenantId = patientService.getTenantIdOrThrow(patientId);
+
+        if ( !patientTenantId.equals( TenantContext.get() ) ) {
+            throw new PatientNotFoundException("The patient with this id: " + patientId + " was not found");
+        }
+    }
+
+    private MedicalHistorySummaryResponse toSummaryWithCounts(MedicalHistory medicalHistory) {
+
+        Long id = medicalHistory.getId();
+
+        int toothRecordCount = medicalHistoryRepository.countToothRecordsByMedicalHistoryId(id);
+        int allergyCount     = medicalHistoryRepository.countAllergiesByMedicalHistoryId(id);
+        int examCount        = medicalHistoryRepository.countExamsByMedicalHistoryId(id);
+
+        return mapper.toSummaryResponse(medicalHistory, toothRecordCount, allergyCount, examCount);
     }
 }

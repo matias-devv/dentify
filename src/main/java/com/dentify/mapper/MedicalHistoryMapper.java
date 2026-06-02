@@ -3,10 +3,12 @@ package com.dentify.mapper;
 import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
 import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.model.MedicalHistory;
 import com.dentify.domain.patient.model.Patient;
 import com.dentify.domain.patientallergy.dto.response.PatientAllergyResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
+import com.dentify.domain.userProfile.model.UserProfile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -68,5 +70,37 @@ public class MedicalHistoryMapper {
                                            allergy.getAllergy().getId(),
                                            allergy.getAllergy().getName(),
                                            allergy.getNotes() );
+    }
+
+    public MedicalHistorySummaryResponse toSummaryResponse(MedicalHistory medicalHistory, int toothRecordCount, int allergyCount, int examCount) {
+
+        return new MedicalHistorySummaryResponse(medicalHistory.getId(),
+                                                medicalHistory.getStartDate(),
+                                                medicalHistory.getOdontogramType(),
+                                                medicalHistory.getObservations(),
+                                                medicalHistory.getPastMedicalHistory(),
+                                                medicalHistory.getHasAllergies(),
+                                                medicalHistory.getDaily_Medication(),
+                                                buildDentistSummary( medicalHistory.getDentist() ),
+                                                buildEditedBySummary( medicalHistory.getEditedBy() ),
+                                                allergyCount,
+                                                toothRecordCount,
+                                                examCount );
+    }
+
+    private MedicalHistorySummaryResponse.DentistSummary buildDentistSummary(Dentist dentist) {
+
+        String fullName = dentist.getUserProfile().getName() + " " + dentist.getUserProfile().getSurname();
+
+        return new MedicalHistorySummaryResponse.DentistSummary(dentist.getId(), fullName);
+    }
+
+    private MedicalHistorySummaryResponse.UserProfileSummary buildEditedBySummary(UserProfile editedBy) {
+
+        if (editedBy == null) return null;
+
+        String fullName = editedBy.getName() + " " + editedBy.getSurname();
+
+        return new MedicalHistorySummaryResponse.UserProfileSummary(editedBy.getId(), fullName);
     }
 }

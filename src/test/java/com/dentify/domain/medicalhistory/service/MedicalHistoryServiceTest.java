@@ -9,6 +9,7 @@ import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
 import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
 import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.model.MedicalHistory;
 import com.dentify.domain.medicalhistory.repository.IMedicalHistoryRepository;
 import com.dentify.domain.patient.model.Patient;
@@ -21,12 +22,12 @@ import com.dentify.exception.dentist.DentistNotFoundException;
 import com.dentify.exception.patient.PatientNotFoundException;
 import com.dentify.mapper.MedicalHistoryMapper;
 import com.dentify.mapper.PatientAllergyMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import com.dentify.security.multitenancy.TenantContext;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -76,21 +77,21 @@ class MedicalHistoryServiceTest {
     @BeforeEach
     void setUp() {
         clinic = Clinic.builder()
-                .id(CLINIC_ID)
-                .build();
+                        .id(CLINIC_ID)
+                        .build();
 
         userProfile = UserProfile.builder()
-                .id(10L)
-                .name("Juan")
-                .surname("Pérez")
-                .build();
+                                .id(10L)
+                                .name("Juan")
+                                .surname("Pérez")
+                                .build();
 
         dentist = Dentist.builder()
-                .id(DENTIST_ID)
-                .active(true)
-                .clinic(clinic)
-                .userProfile(userProfile)
-                .build();
+                        .id(DENTIST_ID)
+                        .active(true)
+                        .clinic(clinic)
+                        .userProfile(userProfile)
+                        .build();
 
         patient = new Patient();
         patient.setId_patient(PATIENT_ID);
@@ -566,4 +567,329 @@ class MedicalHistoryServiceTest {
             assertSame(expectedResponse, actualResponse);
         }
     }
+
+    @Nested
+    class FindAllMedicalHistoryTests {
+
+        private static final String TENANT_ID       = "tenant-abc-123";
+        private static final String OTHER_TENANT_ID = "tenant-xyz-999";
+
+        private MedicalHistory historyOne;
+        private MedicalHistory historyTwo;
+
+        private MedicalHistorySummaryResponse summaryOne;
+        private MedicalHistorySummaryResponse summaryTwo;
+
+        @BeforeEach
+        void setUpTenantAndHistories() {
+            TenantContext.set(TENANT_ID);
+
+            historyOne = buildMedicalHistory(10L, LocalDate.of(2025, 5, 20), null);
+            historyTwo = buildMedicalHistory(11L, LocalDate.of(2024, 11, 10), userProfile);
+
+            summaryOne = buildSummary(10L, LocalDate.of(2025, 5, 20));
+            summaryTwo = buildSummary(11L, LocalDate.of(2024, 11, 10));
+        }
+
+        @AfterEach
+        void clearTenantContext() {
+            TenantContext.clear();
+        }
+
+        // ── Happy path ───────────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Should return all medical histories mapped correctly when patient has multiple records")
+        void shouldReturnAllMedicalHistoriesMappedCorrectly() {
+
+            // given
+            List<MedicalHistory> repositoryResult = List.of(historyOne, historyTwo);
+
+            when( patientService.getTenantIdOrThrow(PATIENT_ID) )
+                    .thenReturn(TENANT_ID);
+
+            when( medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID) )
+                      .thenReturn(repositoryResult);
+
+            stubCountsFor(historyOne, 5, 2, 1);
+            stubCountsFor(historyTwo, 3, 0, 2);
+
+            when( mapper.toSummaryResponse(historyOne, 5, 2, 1) ).thenReturn(summaryOne);
+            when( mapper.toSummaryResponse(historyTwo, 3, 0, 2) ).thenReturn(summaryTwo);
+
+            // when
+            List<MedicalHistorySummaryResponse> result = medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            assertSame(summaryOne, result.get(0));
+            assertSame(summaryTwo, result.get(1));
+        }
+
+        @Test
+        @DisplayName("Should return empty list when patient exists but has no medical histories")
+        void shouldReturnEmptyListWhenPatientHasNoMedicalHistories() {
+
+            // given
+            when( patientService.getTenantIdOrThrow(PATIENT_ID) )
+                    .thenReturn(TENANT_ID);
+            when( medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID) )
+                    .thenReturn(List.of());
+
+            // when
+            List<MedicalHistorySummaryResponse> result = medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+            verify(mapper, never()).toSummaryResponse(any(), anyInt(), anyInt(), anyInt());
+            verify(medicalHistoryRepository, never()).countToothRecordsByMedicalHistoryId(any());
+            verify(medicalHistoryRepository, never()).countAllergiesByMedicalHistoryId(any());
+            verify(medicalHistoryRepository, never()).countExamsByMedicalHistoryId(any());
+        }
+
+        @Test
+        @DisplayName("Should preserve descending order returned by the repository without resorting")
+        void shouldPreserveDescendingOrderReturnedByRepository() {
+
+            // given — repository already returns DESC order; service must not alter it
+            MedicalHistory newest = buildMedicalHistory(20L, LocalDate.of(2025, 6, 1), null);
+            MedicalHistory middle = buildMedicalHistory(21L, LocalDate.of(2025, 3, 15), null);
+            MedicalHistory oldest = buildMedicalHistory(22L, LocalDate.of(2024, 1, 10), null);
+
+            MedicalHistorySummaryResponse summaryNewest = buildSummary(20L, LocalDate.of(2025, 6, 1));
+            MedicalHistorySummaryResponse summaryMiddle = buildSummary(21L, LocalDate.of(2025, 3, 15));
+            MedicalHistorySummaryResponse summaryOldest = buildSummary(22L, LocalDate.of(2024, 1, 10));
+
+            when(patientService.getTenantIdOrThrow(PATIENT_ID)).thenReturn(TENANT_ID);
+            when(medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID))
+                    .thenReturn(List.of(newest, middle, oldest));
+
+            stubCountsFor(newest, 0, 0, 0);
+            stubCountsFor(middle, 0, 0, 0);
+            stubCountsFor(oldest, 0, 0, 0);
+
+            when(mapper.toSummaryResponse(newest, 0, 0, 0)).thenReturn(summaryNewest);
+            when(mapper.toSummaryResponse(middle, 0, 0, 0)).thenReturn(summaryMiddle);
+            when(mapper.toSummaryResponse(oldest, 0, 0, 0)).thenReturn(summaryOldest);
+
+            // when
+            List<MedicalHistorySummaryResponse> result = medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then
+            assertEquals(3, result.size());
+            assertSame(summaryNewest, result.get(0));
+            assertSame(summaryMiddle, result.get(1));
+            assertSame(summaryOldest, result.get(2));
+        }
+
+        @Test
+        @DisplayName("Should map correctly when editedBy is null on a medical history")
+        void shouldMapCorrectlyWhenEditedByIsNull() {
+            // given — historyOne was built with editedBy = null
+            MedicalHistory historyWithNoEditor = buildMedicalHistory(30L, LocalDate.of(2025, 4, 1), null);
+            MedicalHistorySummaryResponse summaryWithNullEditor = buildSummary(30L, LocalDate.of(2025, 4, 1));
+
+            when(patientService.getTenantIdOrThrow(PATIENT_ID)).thenReturn(TENANT_ID);
+            when(medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID))
+                    .thenReturn(List.of(historyWithNoEditor));
+
+            stubCountsFor(historyWithNoEditor, 4, 1, 0);
+            when(mapper.toSummaryResponse(historyWithNoEditor, 4, 1, 0)).thenReturn(summaryWithNullEditor);
+
+            // when
+            List<MedicalHistorySummaryResponse> result = medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then
+            assertNotNull(result);
+            assertEquals(1, result.size());
+            verify(mapper, times(1)).toSummaryResponse(historyWithNoEditor, 4, 1, 0);
+        }
+
+        // ── Exceptions ───────────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Should throw PatientNotFoundException when patient does not exist in the system")
+        void shouldThrowPatientNotFoundExceptionWhenPatientDoesNotExist() {
+            // given
+            when(patientService.getTenantIdOrThrow(PATIENT_ID))
+                    .thenThrow(new PatientNotFoundException("The patient with this id: " + PATIENT_ID + " was not found"));
+
+            // when
+            assertThrows(
+                    PatientNotFoundException.class,
+                    () -> medicalHistoryService.findAllByPatient(PATIENT_ID)
+            );
+
+            // then
+            verifyNoInteractions(medicalHistoryRepository, mapper);
+        }
+
+        @Test
+        @DisplayName("Should throw PatientNotFoundException when patient belongs to a different tenant — no cross-tenant leakage")
+        void shouldThrowPatientNotFoundExceptionWhenPatientBelongsToDifferentTenant() {
+            // given — patient exists but is registered under a different tenant
+            when(patientService.getTenantIdOrThrow(PATIENT_ID)).thenReturn(OTHER_TENANT_ID);
+
+            // when
+            PatientNotFoundException exception = assertThrows(
+                    PatientNotFoundException.class,
+                    () -> medicalHistoryService.findAllByPatient(PATIENT_ID)
+            );
+
+            // then — 404 semantics, never 403: prevents multi-tenancy information leakage
+            assertNotNull(exception.getMessage());
+            verifyNoInteractions(medicalHistoryRepository, mapper);
+        }
+
+        // ── Flow verification ────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Should invoke the repository exactly once for the given patientId")
+        void shouldInvokeRepositoryExactlyOnce() {
+            // given
+            when(patientService.getTenantIdOrThrow(PATIENT_ID)).thenReturn(TENANT_ID);
+            when(medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID))
+                    .thenReturn(List.of());
+
+            // when
+            medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then
+            verify(medicalHistoryRepository, times(1))
+                    .findAllByPatientIdOrderByStartDateDesc(PATIENT_ID);
+            verifyNoMoreInteractions(medicalHistoryRepository);
+        }
+
+        @Test
+        @DisplayName("Should execute all three count queries once per medical history when there are two records")
+        void shouldExecuteThreeCountQueriesPerMedicalHistoryForTwoRecords() {
+            // given
+            when(patientService.getTenantIdOrThrow(PATIENT_ID)).thenReturn(TENANT_ID);
+            when(medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID))
+                    .thenReturn(List.of(historyOne, historyTwo));
+
+            stubCountsFor(historyOne, 2, 1, 3);
+            stubCountsFor(historyTwo, 0, 0, 1);
+
+            when(mapper.toSummaryResponse(eq(historyOne), anyInt(), anyInt(), anyInt())).thenReturn(summaryOne);
+            when(mapper.toSummaryResponse(eq(historyTwo), anyInt(), anyInt(), anyInt())).thenReturn(summaryTwo);
+
+            // when
+            medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then — 2 records × 3 count queries = 6 total count invocations
+            verify(medicalHistoryRepository, times(2)).countToothRecordsByMedicalHistoryId(any());
+            verify(medicalHistoryRepository, times(2)).countAllergiesByMedicalHistoryId(any());
+            verify(medicalHistoryRepository, times(2)).countExamsByMedicalHistoryId(any());
+        }
+
+        @Test
+        @DisplayName("Should pass the exact counts from the repository to the mapper for each medical history")
+        void shouldPassExactCountsToMapper() {
+            // given
+            int expectedToothCount  = 7;
+            int expectedAllergyCount = 3;
+            int expectedExamCount   = 2;
+
+            when(patientService.getTenantIdOrThrow(PATIENT_ID)).thenReturn(TENANT_ID);
+            when(medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID))
+                    .thenReturn(List.of(historyOne));
+
+            stubCountsFor(historyOne, expectedToothCount, expectedAllergyCount, expectedExamCount);
+            when(mapper.toSummaryResponse(historyOne, expectedToothCount, expectedAllergyCount, expectedExamCount))
+                    .thenReturn(summaryOne);
+
+            // when
+            medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then — verifies the exact argument values forwarded to the mapper
+            verify(mapper, times(1))
+                    .toSummaryResponse(historyOne, expectedToothCount, expectedAllergyCount, expectedExamCount);
+        }
+
+        @Test
+        @DisplayName("Should invoke the mapper exactly once per medical history returned by the repository")
+        void shouldInvokeMapperExactlyOncePerMedicalHistory() {
+            // given
+            when(patientService.getTenantIdOrThrow(PATIENT_ID)).thenReturn(TENANT_ID);
+            when(medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID))
+                    .thenReturn(List.of(historyOne, historyTwo));
+
+            stubCountsFor(historyOne, 1, 0, 0);
+            stubCountsFor(historyTwo, 0, 1, 0);
+
+            when(mapper.toSummaryResponse(eq(historyOne), anyInt(), anyInt(), anyInt())).thenReturn(summaryOne);
+            when(mapper.toSummaryResponse(eq(historyTwo), anyInt(), anyInt(), anyInt())).thenReturn(summaryTwo);
+
+            // when
+            medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then
+            verify(mapper, times(1)).toSummaryResponse(eq(historyOne), anyInt(), anyInt(), anyInt());
+            verify(mapper, times(1)).toSummaryResponse(eq(historyTwo), anyInt(), anyInt(), anyInt());
+            verifyNoMoreInteractions(mapper);
+        }
+
+        @Test
+        @DisplayName("Should validate tenant before querying the repository — strict execution order")
+        void shouldValidateTenantBeforeQueryingRepository() {
+
+            // given
+            when( patientService.getTenantIdOrThrow(PATIENT_ID) )
+                    .thenReturn(TENANT_ID);
+
+            when( medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(PATIENT_ID) )
+                    .thenReturn(List.of());
+
+            // when
+            medicalHistoryService.findAllByPatient(PATIENT_ID);
+
+            // then — patientService must be called strictly before the repository
+            InOrder inOrder = inOrder(patientService, medicalHistoryRepository);
+
+            inOrder.verify(patientService).getTenantIdOrThrow(PATIENT_ID);
+
+            inOrder.verify(medicalHistoryRepository).findAllByPatientIdOrderByStartDateDesc(PATIENT_ID);
+        }
+
+        // ── Private helpers ──────────────────────────────────────────────────────
+
+        private MedicalHistory buildMedicalHistory(Long id, LocalDate startDate, UserProfile editedByProfile) {
+            MedicalHistory mh = new MedicalHistory();
+            mh.setId(id);
+            mh.setStartDate(startDate);
+            mh.setOdontogramType(OdontogramType.ADULT);
+            mh.setHasAllergies(false);
+            mh.setDentist(dentist);
+            mh.setPatient(patient);
+            mh.setEditedBy(editedByProfile);
+            return mh;
+        }
+
+        private MedicalHistorySummaryResponse buildSummary(Long id, LocalDate startDate) {
+            return new MedicalHistorySummaryResponse(
+                    id,
+                    startDate,
+                    OdontogramType.ADULT,
+                    null,
+                    null,
+                    false,
+                    null,
+                    new MedicalHistorySummaryResponse.DentistSummary(DENTIST_ID, "Juan Pérez"),
+                    null,
+                    0,
+                    0,
+                    0
+            );
+        }
+
+        private void stubCountsFor(MedicalHistory mh, int toothCount, int allergyCount, int examCount) {
+            when(medicalHistoryRepository.countToothRecordsByMedicalHistoryId(mh.getId())).thenReturn(toothCount);
+            when(medicalHistoryRepository.countAllergiesByMedicalHistoryId(mh.getId())).thenReturn(allergyCount);
+            when(medicalHistoryRepository.countExamsByMedicalHistoryId(mh.getId())).thenReturn(examCount);
+        }
+    }
+
 }
