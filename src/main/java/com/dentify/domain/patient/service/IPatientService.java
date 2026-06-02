@@ -1,31 +1,28 @@
 package com.dentify.domain.patient.service;
 
-import com.dentify.domain.patient.dto.CreatePatientRequestDTO;
+import com.dentify.domain.patient.dto.request.CreatePatientRequestDTO;
+import com.dentify.domain.patient.dto.response.PatientResponse;
 import com.dentify.domain.patient.model.Patient;
+
+import java.time.LocalDate;
+import java.util.List;
 
 public interface IPatientService {
 
-    //create
-    public String savePatient(CreatePatientRequestDTO request);
+    public String savePatient(CreatePatientRequestDTO request, String username);
 
-//    //read
-//    public PatientDTO getPatient(String dni);
+    public boolean verifyMinorAge( LocalDate dateOfBirth);
 
-      public Patient findPatientById(Long id_patient);
-//    public List<PatientDTO> getPatients();
-//
-//    public int getTotalOfPatients();
-//
-//    public List<PatientDTO> getPatientsWithInsurance();
-//
-//    public List<PatientDTO> getPatientsWithoutInsurance();
-//
-//    //update
-//    public String editPatient(Patient patient);
-//
-//    //delete
-//    public String deletePatient(Long id);
-//
-//    public PatientDTO setAttributesDto(Patient patient);
+    public Patient findPatientById(Long id_patient);
 
+    public void validatePatientEmails(List<String> email);
+
+    public List<String> resolvePatientEmail(Patient patient);
+
+    List<PatientResponse> findAllByClinic(String username);
+
+    Patient findPatientByIdAndClinicId(Long patientId, Long clinicId);
 }
+
+
+

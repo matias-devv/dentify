@@ -1,0 +1,569 @@
+package com.dentify.domain.medicalhistory.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.dentify.domain.allergycatalog.model.AllergyCatalog;
+import com.dentify.domain.allergycatalog.service.IAllergyCatalogService;
+import com.dentify.domain.clinic.model.Clinic;
+import com.dentify.domain.dentist.model.Dentist;
+import com.dentify.domain.dentist.service.IDentistService;
+import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
+import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.model.MedicalHistory;
+import com.dentify.domain.medicalhistory.repository.IMedicalHistoryRepository;
+import com.dentify.domain.patient.model.Patient;
+import com.dentify.domain.patient.service.IPatientService;
+import com.dentify.domain.patientallergy.model.PatientAllergy;
+import com.dentify.domain.toothrecord.enums.OdontogramType;
+import com.dentify.domain.userProfile.model.UserProfile;
+import com.dentify.exception.allergycatalog.AllergiesCatalogNotFoundException;
+import com.dentify.exception.dentist.DentistNotFoundException;
+import com.dentify.exception.patient.PatientNotFoundException;
+import com.dentify.mapper.MedicalHistoryMapper;
+import com.dentify.mapper.PatientAllergyMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class MedicalHistoryServiceTest {
+
+    @InjectMocks
+    private MedicalHistoryService medicalHistoryService;
+
+    @Mock
+    private IMedicalHistoryRepository medicalHistoryRepository;
+
+    @Mock
+    private IDentistService dentistService;
+
+    @Mock
+    private IPatientService patientService;
+
+    @Mock
+    private IAllergyCatalogService allergyCatalogService;
+
+    @Mock
+    private MedicalHistoryMapper mapper;
+
+    @Mock
+    private PatientAllergyMapper patientAllergyMapper;
+
+    // ── Fixtures reutilizables ─────────────────────────────────────────────────
+
+    private static final String USERNAME    = "dr.perez";
+    private static final Long   PATIENT_ID  = 7L;
+    private static final Long   DENTIST_ID  = 3L;
+    private static final Long   CLINIC_ID   = 1L;
+
+    private Clinic       clinic;
+    private UserProfile  userProfile;
+    private Dentist      dentist;
+    private Patient      patient;
+
+    @BeforeEach
+    void setUp() {
+        clinic = Clinic.builder()
+                .id(CLINIC_ID)
+                .build();
+
+        userProfile = UserProfile.builder()
+                .id(10L)
+                .name("Juan")
+                .surname("Pérez")
+                .build();
+
+        dentist = Dentist.builder()
+                .id(DENTIST_ID)
+                .active(true)
+                .clinic(clinic)
+                .userProfile(userProfile)
+                .build();
+
+        patient = new Patient();
+        patient.setId_patient(PATIENT_ID);
+        patient.setName("Martín");
+        patient.setSurname("García");
+    }
+
+    // ── Helper factories ───────────────────────────────────────────────────────
+
+    private CreateMedicalHistoryRequest baseRequest() {
+        CreateMedicalHistoryRequest req = new CreateMedicalHistoryRequest();
+        req.setOdontogramType(OdontogramType.ADULT);
+        req.setStartDate(LocalDate.of(2025, 6, 1));
+        req.setHasAllergies(false);
+        req.setAllergyIds(List.of());
+        return req;
+    }
+
+    private MedicalHistory baseMedicalHistory() {
+        MedicalHistory mh = new MedicalHistory();
+        mh.setId(12L);
+        mh.setStartDate(LocalDate.of(2025, 6, 1));
+        mh.setOdontogramType(OdontogramType.ADULT);
+        mh.setHasAllergies(false);
+        mh.setDentist(dentist);
+        mh.setPatient(patient);
+        mh.setAllergies(new ArrayList<>());
+        return mh;
+    }
+
+    private CreateMedicalHistoryResponse stubResponse(MedicalHistory mh) {
+        return new CreateMedicalHistoryResponse(
+                mh.getId(),
+                mh.getStartDate(),
+                OdontogramType.ADULT.name(),
+                null, null,
+                mh.getHasAllergies(),
+                null,
+                List.of(),
+                DENTIST_ID, "Juan", "Pérez",
+                PATIENT_ID, "Martín", "García",
+                null
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    @Nested
+    class CreateMedicalHistoryTests {
+
+        // ── Happy path ─────────────────────────────────────────────────────────
+
+        @Test
+        void shouldCreateMedicalHistorySuccessfullyWithoutAllergies() {
+
+            // given
+            CreateMedicalHistoryRequest request = baseRequest();
+            MedicalHistory builtHistory         = baseMedicalHistory();
+            CreateMedicalHistoryResponse expectedResponse = stubResponse(builtHistory);
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(mapper.buildCreateMedicalHistoryResponse(builtHistory))
+                    .thenReturn(expectedResponse);
+
+            // when
+            CreateMedicalHistoryResponse actualResponse =
+                    medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            assertNotNull(actualResponse);
+            assertEquals(12L,       actualResponse.idMedicalHistory());
+            assertEquals(DENTIST_ID, actualResponse.dentistId());
+            assertEquals(PATIENT_ID, actualResponse.patientId());
+
+            verify(medicalHistoryRepository, times(1)).save(builtHistory);
+            verifyNoInteractions(allergyCatalogService, patientAllergyMapper);
+        }
+
+        @Test
+        void shouldCreateMedicalHistorySuccessfullyWithAllergies() {
+
+            // given
+            List<Long> allergyIds = List.of(1L, 4L);
+
+            CreateMedicalHistoryRequest request = baseRequest();
+            request.setHasAllergies(true);
+            request.setAllergyIds(allergyIds);
+
+            MedicalHistory builtHistory = baseMedicalHistory();
+            builtHistory.setHasAllergies(true);
+
+            AllergyCatalog penicillin = AllergyCatalog.builder().id(1L).name("Penicilina").active(true).build();
+            AllergyCatalog latex      = AllergyCatalog.builder().id(4L).name("Látex").active(true).build();
+            List<AllergyCatalog> catalogAllergies = List.of(penicillin, latex);
+
+            PatientAllergy pa1 = PatientAllergy.builder().allergy(penicillin).medicalHistory(builtHistory).build();
+            PatientAllergy pa2 = PatientAllergy.builder().allergy(latex).medicalHistory(builtHistory).build();
+            List<PatientAllergy> patientAllergies = List.of(pa1, pa2);
+
+            CreateMedicalHistoryResponse expectedResponse = stubResponse(builtHistory);
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(allergyCatalogService.findAllergiesWithThisIds(allergyIds))
+                    .thenReturn(catalogAllergies);
+            when(patientAllergyMapper.buildPatientAllergyList(catalogAllergies, builtHistory))
+                    .thenReturn(patientAllergies);
+            when(mapper.buildCreateMedicalHistoryResponse(builtHistory))
+                    .thenReturn(expectedResponse);
+
+            // when
+            CreateMedicalHistoryResponse actualResponse =
+                    medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            assertNotNull(actualResponse);
+
+            ArgumentCaptor<MedicalHistory> captor = ArgumentCaptor.forClass(MedicalHistory.class);
+            verify(medicalHistoryRepository, times(1)).save(captor.capture());
+            MedicalHistory saved = captor.getValue();
+
+            assertTrue(saved.getHasAllergies());
+            assertEquals(2, saved.getAllergies().size());
+
+            verify(allergyCatalogService, times(1)).findAllergiesWithThisIds(allergyIds);
+            verify(patientAllergyMapper, times(1)).buildPatientAllergyList(catalogAllergies, builtHistory);
+        }
+
+        @Test
+        void shouldIgnoreAllergyIdsWhenHasAllergiesIsFalse() {
+
+            // given — hasAllergies = false pero llegan allergyIds con valores
+            CreateMedicalHistoryRequest request = baseRequest();
+            request.setHasAllergies(false);
+            request.setAllergyIds(List.of(1L, 2L, 3L)); // deben ser ignorados
+
+            MedicalHistory builtHistory = baseMedicalHistory();
+            CreateMedicalHistoryResponse expectedResponse = stubResponse(builtHistory);
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(mapper.buildCreateMedicalHistoryResponse(builtHistory))
+                    .thenReturn(expectedResponse);
+
+            // when
+            medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then — jamás debe consultar allergyCatalogService
+            verifyNoInteractions(allergyCatalogService, patientAllergyMapper);
+            verify(medicalHistoryRepository, times(1)).save(builtHistory);
+        }
+
+        @Test
+        void shouldCreateMedicalHistoryWhenHasAllergiesIsTrueButAllergyIdsIsEmpty() {
+
+            // given
+            CreateMedicalHistoryRequest request = baseRequest();
+            request.setHasAllergies(true);
+            request.setAllergyIds(List.of()); // vacío: la condición del if no se cumple
+
+            MedicalHistory builtHistory = baseMedicalHistory();
+            builtHistory.setHasAllergies(true);
+            CreateMedicalHistoryResponse expectedResponse = stubResponse(builtHistory);
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(mapper.buildCreateMedicalHistoryResponse(builtHistory))
+                    .thenReturn(expectedResponse);
+
+            // when
+            CreateMedicalHistoryResponse actualResponse =
+                    medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            assertNotNull(actualResponse);
+            verify(medicalHistoryRepository, times(1)).save(builtHistory);
+            verifyNoInteractions(allergyCatalogService, patientAllergyMapper);
+        }
+
+        @Test
+        void shouldCreateMedicalHistoryWhenHasAllergiesIsTrueButAllergyIdsIsNull() {
+
+            // given — allergyIds null (defensivo: null no cumple la condición != null del if)
+            CreateMedicalHistoryRequest request = baseRequest();
+            request.setHasAllergies(true);
+            request.setAllergyIds(null);
+
+            MedicalHistory builtHistory = baseMedicalHistory();
+            builtHistory.setHasAllergies(true);
+            CreateMedicalHistoryResponse expectedResponse = stubResponse(builtHistory);
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(mapper.buildCreateMedicalHistoryResponse(builtHistory))
+                    .thenReturn(expectedResponse);
+
+            // when
+            CreateMedicalHistoryResponse actualResponse =
+                    medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            assertNotNull(actualResponse);
+            verify(medicalHistoryRepository, times(1)).save(builtHistory);
+            verifyNoInteractions(allergyCatalogService, patientAllergyMapper);
+        }
+
+        // ── Excepciones ────────────────────────────────────────────────────────
+
+        @Test
+        void shouldThrowDentistNotFoundExceptionWhenDentistDoesNotExist() {
+
+            // given
+            CreateMedicalHistoryRequest request = baseRequest();
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenThrow(new DentistNotFoundException("The dentist with this username was not found"));
+
+            // when
+            Executable executable =
+                    () -> medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            assertThrows(DentistNotFoundException.class, executable);
+            verifyNoInteractions(patientService, medicalHistoryRepository, allergyCatalogService);
+        }
+
+        @Test
+        void shouldThrowPatientNotFoundExceptionWhenPatientDoesNotExist() {
+
+            // given
+            CreateMedicalHistoryRequest request = baseRequest();
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenThrow(new PatientNotFoundException("The patient with this id: " + PATIENT_ID + " was not found"));
+
+            // when
+            Executable executable =
+                    () -> medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            assertThrows(PatientNotFoundException.class, executable);
+            verifyNoInteractions(medicalHistoryRepository, allergyCatalogService);
+        }
+
+        @Test
+        void shouldThrowPatientNotFoundExceptionWhenPatientBelongsToAnotherTenant() {
+
+            // given — clínica diferente → findPatientByIdAndClinicId no encuentra nada
+            CreateMedicalHistoryRequest request = baseRequest();
+            Long otherClinicId = 99L;
+            Clinic otherClinic = Clinic.builder().id(otherClinicId).build();
+            dentist.setClinic(otherClinic);
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, otherClinicId))
+                    .thenThrow(new PatientNotFoundException("The patient with this id: " + PATIENT_ID + " was not found"));
+
+            // when
+            Executable executable =
+                    () -> medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then — siempre 404, nunca exponer cross-tenant
+            PatientNotFoundException exception = assertThrows(PatientNotFoundException.class, executable);
+            assertEquals("PATIENT_NOT_FOUND", exception.getErrorCode());
+            verifyNoInteractions(medicalHistoryRepository, allergyCatalogService);
+        }
+
+        @Test
+        void shouldThrowAllergiesCatalogNotFoundExceptionWhenNoneOfTheAllergyIdsExist() {
+
+            // given — el repositorio no encuentra ningún ID (Optional vacío → servicio lanza excepción)
+            List<Long> allergyIds = List.of(999L, 1000L);
+
+            CreateMedicalHistoryRequest request = baseRequest();
+            request.setHasAllergies(true);
+            request.setAllergyIds(allergyIds);
+
+            MedicalHistory builtHistory = baseMedicalHistory();
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(allergyCatalogService.findAllergiesWithThisIds(allergyIds))
+                    .thenThrow(new AllergiesCatalogNotFoundException("There is no allergy record for these ids"));
+
+            // when
+            Executable executable =
+                    () -> medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            assertThrows(AllergiesCatalogNotFoundException.class, executable);
+            verify(medicalHistoryRepository, never()).save(any());
+        }
+
+        @Test
+        void shouldThrowAllergiesCatalogNotFoundExceptionWhenSomeAllergyIdsAreNotFound() {
+
+            // given — se piden 3 IDs pero el catálogo sólo devuelve 2 (uno no existe o está inactivo)
+            List<Long> allergyIds = List.of(1L, 4L, 999L);
+
+            CreateMedicalHistoryRequest request = baseRequest();
+            request.setHasAllergies(true);
+            request.setAllergyIds(allergyIds);
+
+            MedicalHistory builtHistory = baseMedicalHistory();
+
+            AllergyCatalog penicillin = AllergyCatalog.builder().id(1L).name("Penicilina").active(true).build();
+            AllergyCatalog latex      = AllergyCatalog.builder().id(4L).name("Látex").active(true).build();
+            // ID 999 no existe → foundIds = {1, 4} → missingIds = [999] → lanza excepción
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(allergyCatalogService.findAllergiesWithThisIds(allergyIds))
+                    .thenReturn(List.of(penicillin, latex));
+
+            // when
+            Executable executable =
+                    () -> medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            AllergiesCatalogNotFoundException exception =
+                    assertThrows(AllergiesCatalogNotFoundException.class, executable);
+
+            assertTrue(exception.getMessage().contains("999"));
+            verify(medicalHistoryRepository, never()).save(any());
+        }
+
+        @Test
+        void shouldThrowAllergiesCatalogNotFoundExceptionWhenAllergyIsInactive() {
+
+            // given — el allergy_catalog filtra WHERE active = true → el ID inactivo no se devuelve
+            List<Long> allergyIds = List.of(5L); // ID 5 existe pero active = false → no lo devuelve la query
+
+            CreateMedicalHistoryRequest request = baseRequest();
+            request.setHasAllergies(true);
+            request.setAllergyIds(allergyIds);
+
+            MedicalHistory builtHistory = baseMedicalHistory();
+
+            // El repositorio filtra active=true, por lo que devuelve lista vacía → servicio lanza excepción
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(allergyCatalogService.findAllergiesWithThisIds(allergyIds))
+                    .thenThrow(new AllergiesCatalogNotFoundException("There is no allergy record for these ids"));
+
+            // when
+            Executable executable =
+                    () -> medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            assertThrows(AllergiesCatalogNotFoundException.class, executable);
+            verify(medicalHistoryRepository, never()).save(any());
+        }
+
+        // ── Verificación de flujo ──────────────────────────────────────────────
+
+        @Test
+        void shouldResolvePatientUsingClinicIdFromDentist() {
+
+            // given — validamos que se usa dentist.getClinic().getId() y no otro valor
+            CreateMedicalHistoryRequest request = baseRequest();
+            MedicalHistory builtHistory         = baseMedicalHistory();
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(mapper.buildCreateMedicalHistoryResponse(builtHistory))
+                    .thenReturn(stubResponse(builtHistory));
+
+            // when
+            medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            verify(patientService, times(1))
+                    .findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID);
+        }
+
+        @Test
+        void shouldCallSaveExactlyOnceRegardlessOfAllergiesPresence() {
+
+            // given
+            CreateMedicalHistoryRequest request = baseRequest();
+            request.setHasAllergies(true);
+            request.setAllergyIds(List.of(1L));
+
+            MedicalHistory builtHistory = baseMedicalHistory();
+            builtHistory.setHasAllergies(true);
+
+            AllergyCatalog penicillin = AllergyCatalog.builder().id(1L).name("Penicilina").active(true).build();
+            PatientAllergy pa = PatientAllergy.builder().allergy(penicillin).medicalHistory(builtHistory).build();
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(allergyCatalogService.findAllergiesWithThisIds(List.of(1L)))
+                    .thenReturn(List.of(penicillin));
+            when(patientAllergyMapper.buildPatientAllergyList(List.of(penicillin), builtHistory))
+                    .thenReturn(List.of(pa));
+            when(mapper.buildCreateMedicalHistoryResponse(builtHistory))
+                    .thenReturn(stubResponse(builtHistory));
+
+            // when
+            medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then
+            verify(medicalHistoryRepository, times(1)).save(any(MedicalHistory.class));
+            verifyNoMoreInteractions(medicalHistoryRepository);
+        }
+
+        @Test
+        void shouldPassBuiltMedicalHistoryToMapperForResponse() {
+
+            // given
+            CreateMedicalHistoryRequest request = baseRequest();
+            MedicalHistory builtHistory         = baseMedicalHistory();
+            CreateMedicalHistoryResponse expectedResponse = stubResponse(builtHistory);
+
+            when(dentistService.findDentistByAuthUserUsername(USERNAME))
+                    .thenReturn(dentist);
+            when(patientService.findPatientByIdAndClinicId(PATIENT_ID, CLINIC_ID))
+                    .thenReturn(patient);
+            when(mapper.buildMedicalHistory(dentist, patient, request))
+                    .thenReturn(builtHistory);
+            when(mapper.buildCreateMedicalHistoryResponse(builtHistory))
+                    .thenReturn(expectedResponse);
+
+            // when
+            CreateMedicalHistoryResponse actualResponse =
+                    medicalHistoryService.createMedicalHistory(PATIENT_ID, USERNAME, request);
+
+            // then — el mapper recibe la misma instancia que se persistió
+            verify(mapper, times(1)).buildCreateMedicalHistoryResponse(builtHistory);
+            assertSame(expectedResponse, actualResponse);
+        }
+    }
+}
