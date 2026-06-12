@@ -6,19 +6,24 @@ import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
 import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
 import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.dto.response.MedicalHistoryDetailResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.model.MedicalHistory;
 import com.dentify.domain.medicalhistory.repository.IMedicalHistoryRepository;
 import com.dentify.domain.patient.model.Patient;
 import com.dentify.domain.patient.service.IPatientService;
+import com.dentify.domain.patientallergy.dto.response.PatientAllergyDetailResponse;
+import com.dentify.domain.patientallergy.dto.response.PatientAllergyResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
 import com.dentify.exception.allergycatalog.AllergiesCatalogNotFoundException;
+import com.dentify.exception.medicalhistory.MedicalHistoryNotFoundException;
 import com.dentify.exception.patient.PatientNotFoundException;
 import com.dentify.mapper.MedicalHistoryMapper;
 import com.dentify.mapper.PatientAllergyMapper;
 import com.dentify.security.multitenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -92,7 +97,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
     @Override
     public List<MedicalHistorySummaryResponse> findAllByPatient(Long patientId) {
 
-        validatePatientBelongsToTenant(patientId);
+        this.validatePatientBelongsToTenant(patientId);
 
         return medicalHistoryRepository.findAllByPatientIdOrderByStartDateDesc(patientId)
                                        .stream()
@@ -119,4 +124,56 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
         return mapper.toSummaryResponse(medicalHistory, toothRecordCount, allergyCount, examCount);
     }
+
+    @Override
+    public MedicalHistoryDetailResponse getMedicalHistoryDetail(Long patientId, Long medicalHistoryId, String username) {
+
+        this.validatePatientBelongsToTenant(patientId);
+
+        Patient patient =  patientService.findPatientById(patientId);
+
+        MedicalHistory medicalHistory = this.findMedicalHistoryBaseById(medicalHistoryId);
+
+        //add necessary collections to the actual object
+        medicalHistoryRepository.findWithToothRecords(medicalHistoryId);
+        medicalHistoryRepository.findWithAllergies(medicalHistoryId);
+        medicalHistoryRepository.findWithExams(medicalHistoryId);
+
+        this.validateOwnershipOfMedicalHistory( medicalHistory.getPatient().getId_patient(), patient.getId_patient() );
+
+        List<PatientAllergyDetailResponse> allergies = this.resolveAllergies(medicalHistory);
+
+        return mapper.buildMedicalHistoryDetailResponse(medicalHistory, patient, allergies);
+    }
+
+    public MedicalHistory findMedicalHistoryBaseById(Long medicalHistoryId) {
+        return medicalHistoryRepository.findMedicalHistoryBaseById(medicalHistoryId)
+                                       .orElseThrow( ()-> new MedicalHistoryNotFoundException("The medical history with this id: " + medicalHistoryId + " was not found") );
+    }
+
+    private void validateOwnershipOfMedicalHistory(Long ownerPatientId, Long patientRequestedId) {
+
+        if ( !ownerPatientId.equals(patientRequestedId) ) {
+            throw new ResourceNotFoundException("Medical history not found");
+        }
+    }
+
+    private List<PatientAllergyDetailResponse> resolveAllergies(MedicalHistory medicalHistory) {
+
+        if( medicalHistory.getHasAllergies() == false ) {
+            return List.of();
+        }
+
+        List<PatientAllergy> allergyEntities = medicalHistory.getAllergies();
+
+        if( allergyEntities == null || allergyEntities.isEmpty() ) {
+            return List.of();
+        }
+
+        return allergyEntities.stream()
+                              .map(patientAllergyMapper::toPatientAllergyDetailResponse)
+                              .toList();
+    }
+
+
 }

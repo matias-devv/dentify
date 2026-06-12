@@ -2,6 +2,7 @@ package com.dentify.domain.medicalhistory.controller;
 
 import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
 import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.dto.response.MedicalHistoryDetailResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.service.IMedicalHistoryService;
 import jakarta.validation.Valid;
@@ -39,4 +40,14 @@ public class MedicalHistoryController {
 
         return ResponseEntity.ok(records);
     }
+
+    @PreAuthorize("hasAnyRole('DENTIST','SECRETARY')")
+    @GetMapping("/{patientId}/{medicalHistoryId}")
+    public ResponseEntity<MedicalHistoryDetailResponse> getMedicalHistoryDetail (@PathVariable Long patientId, @PathVariable Long medicalHistoryId,
+                                                                                 @AuthenticationPrincipal String username){
+
+        return ResponseEntity.status(HttpStatus.OK).body( medicalHistoryService.getMedicalHistoryDetail( patientId, medicalHistoryId, username) );
+    }
+
+
 }
