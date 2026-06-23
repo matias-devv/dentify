@@ -2,10 +2,13 @@ package com.dentify.domain.medicalhistory.service;
 
 import com.dentify.domain.allergycatalog.model.AllergyCatalog;
 import com.dentify.domain.allergycatalog.service.IAllergyCatalogService;
+import com.dentify.domain.clinic.service.IClinicService;
 import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
 import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
+import com.dentify.domain.medicalhistory.dto.request.EditMedicalHistoryRequest;
 import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.dto.response.EditMedicalHistoryResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistoryDetailResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.model.MedicalHistory;
@@ -17,10 +20,13 @@ import com.dentify.domain.patientallergy.dto.response.PatientAllergyResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
 import com.dentify.exception.allergycatalog.AllergiesCatalogNotFoundException;
 import com.dentify.exception.medicalhistory.MedicalHistoryNotFoundException;
+import com.dentify.exception.medicalhistory.OdontogramTypeConflictException;
 import com.dentify.exception.patient.PatientNotFoundException;
+import com.dentify.exception.patientallergy.AllergyInconsistencyException;
 import com.dentify.mapper.MedicalHistoryMapper;
 import com.dentify.mapper.PatientAllergyMapper;
 import com.dentify.security.multitenancy.TenantContext;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.exception.ResourceNotFoundException;
@@ -42,6 +48,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
     private final IDentistService dentistService;
     private final IPatientService patientService;
     private final IAllergyCatalogService allergyCatalogService;
+    private final IClinicService clinicService;
 
     //mappers
     private final MedicalHistoryMapper mapper;
@@ -175,5 +182,63 @@ public class MedicalHistoryService implements IMedicalHistoryService {
                               .toList();
     }
 
+    @Override
+    @Transactional
+    public EditMedicalHistoryResponse editMedicalHistory(EditMedicalHistoryRequest request, String username, Long patientId, Long medicalHistoryId) {
 
+        Dentist dentist = dentistService.findDentistByAuthUserUsername(username);
+
+        Patient patient = patientService.findPatientByIdWithClinic(patientId);
+
+        clinicService.verifyIfTheyBelongToTheSameClinic( dentist.getClinic().getId(), patient.getClinic().getId() );
+
+        MedicalHistory medicalHistory = this.findMedicalHistoryBaseById(medicalHistoryId);
+
+        this.verifyIfMedicalHistoryBelongsToThisPatient( medicalHistory, patient.getId_patient() );
+        this.checkRequestedOdontogramType(request, medicalHistory);
+        this.checkRequestedFieldHasAllergies(request, medicalHistory);
+
+        medicalHistory = mapper.setNewAttributes(request, medicalHistory);
+
+        medicalHistory.setEditedBy( dentist.getUserProfile() );
+
+        medicalHistoryRepository.save(medicalHistory);
+
+        return mapper.buildEditMedicalHistoryResponse(medicalHistory, dentist, patient);
+    }
+
+    private void verifyIfMedicalHistoryBelongsToThisPatient( MedicalHistory medicalHistory, Long idPatient) {
+
+        if ( !medicalHistory.getPatient().getId_patient().equals(idPatient) ) {
+            throw new PatientNotFoundException("The medical history of the patient provided was not found");
+        }
+    }
+
+    private void checkRequestedOdontogramType(EditMedicalHistoryRequest request, MedicalHistory medicalHistory) {
+
+        if ( request.odontogramType() == null ) return;
+
+        if( !request.odontogramType().equals( medicalHistory.getOdontogramType() ) ) {
+
+            //if not empty
+            if( !medicalHistory.isToothRecordsListEmpty() ){
+                throw new OdontogramTypeConflictException("Cannot change odontogram type: this clinical history already has tooth records. Delete them first");
+            }
+        }
+        //If no tooth records exist -> changing the odontogram type is freely permitted
+    }
+
+    private void checkRequestedFieldHasAllergies(EditMedicalHistoryRequest request, MedicalHistory medicalHistory) {
+
+        if( request.hasAllergies() == null ) return;
+
+        if( request.hasAllergies().equals(false) ){
+
+            //if not empty
+            if( !medicalHistory.isAllergiesListEmpty() ) {
+                throw new AllergyInconsistencyException("Cannot set hasAllergies to false: this medical history has active allergy records. Remove them first.");
+            }
+        }
+        //If no allergy records exist -> changing to false the field "hasAllergies" is freely permitted
+    }
 }
