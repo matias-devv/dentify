@@ -7,7 +7,9 @@ import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.diagnosistypecatalog.dto.response.DiagnosisTypeCatalogResponse;
 import com.dentify.domain.diagnosistypecatalog.model.DiagnosisTypeCatalog;
 import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
+import com.dentify.domain.medicalhistory.dto.request.EditMedicalHistoryRequest;
 import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.dto.response.EditMedicalHistoryResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistoryDetailResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.model.MedicalHistory;
@@ -233,4 +235,27 @@ public class MedicalHistoryMapper {
                                              uploaderProfileResponse );
     }
 
+    public MedicalHistory setNewAttributes(EditMedicalHistoryRequest request, MedicalHistory medicalHistory) {
+
+        if ( request.pastMedicalHistory() != null ) medicalHistory.setPastMedicalHistory( request.pastMedicalHistory() );
+        if ( request.observations() != null ) medicalHistory.setPastMedicalHistory( request.observations() );
+        if ( request.hasAllergies() != null ) medicalHistory.setHasAllergies( request.hasAllergies() );
+        if ( request.dailyMedication() != null ) medicalHistory.setDailyMedication( request.dailyMedication() );
+        if ( request.odontogramType() != null ) medicalHistory.setOdontogramType( request.odontogramType() );
+        return medicalHistory;
+    }
+
+    public EditMedicalHistoryResponse buildEditMedicalHistoryResponse(MedicalHistory medicalHistory, Dentist dentist, Patient patient ) {
+        return new EditMedicalHistoryResponse(medicalHistory.getId(),
+                                              medicalHistory.getStartDate(),
+                                              medicalHistory.getOdontogramType(),
+                                              medicalHistory.getPastMedicalHistory(),
+                                              medicalHistory.getObservations(),
+                                              medicalHistory.getHasAllergies(),
+                                              medicalHistory.getDailyMedication(),
+                                              dentist.getId(),
+                                              dentist.getUserProfile().getName(),
+                                              patient.getId_patient(),
+                                              dentist.getUserProfile().getId() );
+    }
 }
