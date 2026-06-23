@@ -1,7 +1,9 @@
 package com.dentify.domain.medicalhistory.controller;
 
 import com.dentify.domain.medicalhistory.dto.request.CreateMedicalHistoryRequest;
+import com.dentify.domain.medicalhistory.dto.request.EditMedicalHistoryRequest;
 import com.dentify.domain.medicalhistory.dto.response.CreateMedicalHistoryResponse;
+import com.dentify.domain.medicalhistory.dto.response.EditMedicalHistoryResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistoryDetailResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.service.IMedicalHistoryService;
@@ -49,5 +51,11 @@ public class MedicalHistoryController {
         return ResponseEntity.status(HttpStatus.OK).body( medicalHistoryService.getMedicalHistoryDetail( patientId, medicalHistoryId, username) );
     }
 
+    @PreAuthorize("hasRole('DENTIST')")
+    @PutMapping("/{patientId}/{medicalHistoryId}")
+    public ResponseEntity<EditMedicalHistoryResponse> editMedicalHistory(@RequestBody EditMedicalHistoryRequest request, @AuthenticationPrincipal String username,
+                                                                         @PathVariable Long patientId, @PathVariable Long medicalHistoryId){
 
+        return ResponseEntity.status(HttpStatus.OK).body( medicalHistoryService.editMedicalHistory(request, username, patientId, medicalHistoryId) );
+    }
 }
