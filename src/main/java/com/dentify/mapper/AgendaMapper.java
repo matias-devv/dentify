@@ -36,6 +36,7 @@ public class AgendaMapper {
                 agenda.getId_agenda(),
                 agenda.getAgenda_name(),
                 agenda.getDentist().getUserProfile().getName() + " " + agenda.getDentist().getUserProfile().getSurname(),
+                agenda.getDentist().getId(),
                 agenda.getActive(),
                 agenda.getStart_date(),
                 agenda.getFinal_date(),
