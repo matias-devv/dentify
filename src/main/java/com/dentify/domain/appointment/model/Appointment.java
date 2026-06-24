@@ -52,7 +52,7 @@ public class Appointment {
     private LocalDateTime confirmed_at;
     private LocalDateTime cancelled_at;
 
-    Boolean lateArrival = false; // Marks that this appointment went through NO_SHOW → WALK_IN_PENDING → ADMITTED.
+    private Boolean lateArrival = false; // Marks that this appointment went through NO_SHOW → WALK_IN_PENDING → ADMITTED.
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "clinic_id", nullable = false)
@@ -165,4 +165,10 @@ public class Appointment {
     }
 
     public boolean isCompleted() { return this.appointmentStatus == AppointmentStatus.COMPLETED; }
+
+    public void recordNewConfirmation() {
+
+        this.appointmentStatus = AppointmentStatus.CONFIRMED;
+        this.confirmed_at =  LocalDateTime.now();
+    }
 }
