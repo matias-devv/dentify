@@ -8,10 +8,7 @@ import com.dentify.domain.appointment.dto.response.AppointmentCancelledResponse;
 import com.dentify.domain.appointment.dto.response.CreateAppointmentResponseDTO;
 import com.dentify.domain.appointment.service.IAppointmentService;
 import com.mercadopago.net.HttpStatus;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,10 +51,11 @@ public class AppointmentController {
     }
 
     @PreAuthorize("hasRole('DENTIST')")
-    @GetMapping("/today")
-    public ResponseEntity<List> getAppointmentsTodayForDentist(@AuthenticationPrincipal String username){
+    @GetMapping("/day")
+    public ResponseEntity<List> getAppointmentsByDayForDentist(@AuthenticationPrincipal String username,
+                                                               @RequestParam(required = false) String date ){
 
-        List<AppointmentTodayResponse> response = appointmentService.getAppointmentsTodayForDentist(username);
+        List<AppointmentTodayResponse> response = appointmentService.getAppointmentsByDayForDentist(username, date);
         return ResponseEntity.status(200).body(response);
     }
 
