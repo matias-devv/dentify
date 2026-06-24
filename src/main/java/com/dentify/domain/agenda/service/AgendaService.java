@@ -7,19 +7,20 @@ import com.dentify.domain.agenda.repository.IAgendaRepository;
 import com.dentify.domain.clinic.model.Clinic;
 import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
+import com.dentify.domain.product.model.Product;
 import com.dentify.domain.schedule.model.Schedule;
 import com.dentify.domain.schedule.service.IScheduleService;
 import com.dentify.domain.userProfile.service.IUserProfileService;
 import com.dentify.exception.agenda.*;
 import com.dentify.domain.product.service.IProductService;
+import com.dentify.exception.general.InvalidRequestDateException;
 import com.dentify.exception.schedule.InvalidScheduleTimeException;
 import com.dentify.mapper.AgendaMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -109,6 +110,11 @@ public class AgendaService implements IAgendaService {
         }
     }
 
+    private void validateStartTimeIsNotBeforeCurrentTime ( LocalTime startTime ){
+
+        if ( startTime.isBefore( LocalTime.now() ) ) throw new InvalidScheduleTimeException("The start time cannot be before the current time");
+    }
+
     @Override
     public void verifyIfThisAgendaBelongsToTheDentist(Agenda agenda, Dentist dentist) {
 
@@ -118,13 +124,26 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public void validatAgendaToCreateAppointment(Agenda agenda, Dentist dentist, LocalDate date, LocalTime starTime) {
+    public void validatAgendaToCreateAppointment(Agenda agenda, Dentist dentist, LocalDate date, LocalTime startime) {
+
+        this.validatePastDate(date);
 
         this.validateIfAgendaIsActive( agenda);
 
         this.verifyIfThisAgendaBelongsToTheDentist( agenda, dentist);
 
-        this.validateAgendaAvailability( agenda, date, starTime);
+        this.validateAgendaAvailability( agenda, date, startime);
+
+        this.validateStartTimeIsNotBeforeCurrentTime( startime );
+    }
+
+    private void validatePastDate(LocalDate date) {
+
+        LocalDate now = LocalDate.now();
+
+        if(date.isBefore(now)){
+            throw new InvalidRequestDateException("The date sent must be today's date or later than today's date");
+        }
     }
 
     private void validateDates(CreateAgendaRequest request) {
@@ -161,7 +180,7 @@ public class AgendaService implements IAgendaService {
     @Override
     public void validateDateRangeInAgenda(Agenda agenda, LocalDate startDate, LocalDate endDate) {
 
-        if ( !agenda.getStart_date().isBefore(startDate) || !agenda.getFinal_date().isAfter(endDate) ) {
+        if ( agenda.getStart_date().isAfter(startDate) || agenda.getFinal_date().isBefore(endDate) ) {
             throw new AgendaDateOutOfRangeException("The requested dates are not in the valid range defined in the calendar.");
         }
     }
@@ -182,7 +201,7 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public Agenda findAgendaWithSchedules(Long idAgenda) {
+    public Agenda findAgendaWithSchedules(Long idAgenda) { //verificar si realmente funciona agenda ( me paso un bug de querer buscar una existente y no encontrarla
         return agendaRepository.findAgendaWithSchedules(idAgenda).orElseThrow(()-> new AgendaNotFoundException("The agenda requested does not exist"));
     }
 
@@ -208,6 +227,56 @@ public class AgendaService implements IAgendaService {
         return agendas.stream()
                       .map( agendaMapper::createAgendaResponse)
                       .toList();
+    }
+
+    @Override
+    public LocalDateTime resolveFirstDateOfMonthInAgenda(Agenda agenda, YearMonth yearMonth) {
+
+        LocalDateTime startOfMonth = yearMonth.atDay(1).atStartOfDay();
+
+        LocalDateTime agendaStart = agenda.getStart_date().atStartOfDay();
+
+        if ( agendaStart.isAfter(startOfMonth) ){
+            return agendaStart; //load appointments from this date
+        }
+        return startOfMonth; //in case of false load appointments from first date of month
+    }
+
+    @Override
+    public LocalDateTime resolveLastDateOfMonthInAgenda(Agenda agenda, YearMonth yearMonth) {
+
+        LocalDateTime endOfMonth = yearMonth.atEndOfMonth().atTime(LocalTime.MAX);
+
+        LocalDateTime agendaEnd = agenda.getFinal_date().atTime(LocalTime.MAX);
+
+        if ( agendaEnd.isBefore(endOfMonth) ){
+            return agendaEnd; //load appointments from this date
+        }
+        return endOfMonth; //in case of false load appointments from end date of month
+    }
+
+    @Override
+    public void validateMonthInAgenda(Agenda agenda, YearMonth yearMonth) {
+
+        List<Integer> numberOfMonths = this.getNumberOfMonthsBetween(agenda.getStart_date(), agenda.getFinal_date());
+
+        if ( !numberOfMonths.contains(yearMonth.getMonthValue() ) ){
+            throw new AgendaMonthOutOfRangeException("The requested month must be within the valid months of the agenda ");
+        }
+    }
+
+    private List<Integer> getNumberOfMonthsBetween(LocalDate startDate, LocalDate finalDate) {
+
+        LocalDate date = startDate.withDayOfMonth(1);
+
+        List<Integer> months = new ArrayList<>();
+
+        while ( !date.isAfter(finalDate) ) {
+
+            months.add( date.getMonthValue());
+            date = date.plusMonths(1);
+        }
+        return months;
     }
 
 
