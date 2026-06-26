@@ -38,29 +38,32 @@ public class CalendarService implements ICalendarService{
     private final CalendarMapper calendarMapper;
 
     @Override
-    public MonthResponse getMonthlySummary(MonthRequest request) {
+    public MonthResponse getMonthlySummary(Long id_agenda, Long id_product, Integer year, Integer month_number) {
 
         List<DailySummaryResponse> days = new ArrayList<>();
 
-        Agenda agenda = agendaService.findAgendaWithSchedules( request.id_agenda() );
+        Agenda agenda = agendaService.findAgendaWithSchedules( id_agenda );
 
         agendaService.validateIfAgendaIsActive(agenda);
 
-        YearMonth yearMonth = YearMonth.of( request.year(), Month.of( request.month_number() ) );
+        YearMonth yearMonth = YearMonth.of(year, month_number);
 
-        LocalDateTime start = yearMonth.atDay(1).atStartOfDay();
-        LocalDateTime end = yearMonth.atEndOfMonth().atStartOfDay();
+        agendaService.validateMonthInAgenda( agenda, yearMonth);
 
-        agendaService.validateDateRangeInAgenda( agenda, start.toLocalDate(), end.toLocalDate() );
+        LocalDateTime startDate = agendaService.resolveFirstDateOfMonthInAgenda( agenda, yearMonth);
 
-        List< Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDateRange( agenda.getId_agenda(), start, end);
+        LocalDateTime endDate = agendaService.resolveLastDateOfMonthInAgenda( agenda, yearMonth);
+
+        agendaService.validateDateRangeInAgenda( agenda, startDate.toLocalDate(), endDate.toLocalDate() );
+
+        List< Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDateRange( agenda.getId_agenda(), startDate, endDate);
 
         Map< LocalDateTime, Appointment> mapAppointments = appointmentService.fillInAppointmentMap( appointments );
 
         Map< DayOfWeek, List<Schedule> > mapDays = agenda.fillMapDays();
 
         //Add 1 day so that it does not exclude the last day
-        List<LocalDate> dates = start.toLocalDate().datesUntil( end.toLocalDate().plusDays(1) ).toList();
+        List<LocalDate> dates = startDate.toLocalDate().datesUntil( endDate.toLocalDate().plusDays(1) ).toList();
 
         for( LocalDate date : dates ) {
 
@@ -135,22 +138,25 @@ public class CalendarService implements ICalendarService{
     }
 
     @Override
-    public @Nullable WeekResponse getWeeklySlots(WeekRequest request) {
+    public @Nullable WeekResponse getWeeklySlots(Long id_agenda, Long id_product, String startDate, String endDate) {
+
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
 
         List<DayResponse> dayResponses = new ArrayList<>();
 
-        Agenda agenda = agendaService.findAgendaWithSchedules( request.id_agenda() );
+        Agenda agenda = agendaService.findAgendaWithSchedules( id_agenda );
 
-        agendaService.validateDateRangeInAgenda( agenda, request.startDate(), request.endDate());
+        agendaService.validateDateRangeInAgenda( agenda, start, end);
 
         List<Appointment> appointments = appointmentService.findAppointmentsByAgendaAndDateRange( agenda.getId_agenda(),
-                                                                                                  request.startDate().atStartOfDay(),
-                                                                                                  request.endDate().atStartOfDay() );
+                                                                                                  start.atStartOfDay(),
+                                                                                                  end.atStartOfDay());
 
         Map<LocalDateTime, Appointment> mapAppointments = appointmentService.fillInAppointmentMap( appointments );
 
         //Add 1 day so that it does not exclude the last day
-        List<LocalDate> dates = request.startDate().datesUntil( request.endDate().plusDays(1) ).toList();
+        List<LocalDate> dates = start.datesUntil( end.plusDays(1) ).toList();
 
         Map< DayOfWeek, List<Schedule> > mapDays = agenda.fillMapDays();
 
@@ -160,7 +166,7 @@ public class CalendarService implements ICalendarService{
 
             List<Schedule> schedulesForDay = mapDays.get(dayOfWeek);
 
-            if(schedulesForDay != null) {
+            if( schedulesForDay != null) {
 
                     DayResponse response =  this.buildDayResponseListForMultipleSchedules( date, schedulesForDay, mapAppointments);
 
