@@ -6,9 +6,9 @@ import com.dentify.domain.notification.enums.ReminderWindow;
 import com.dentify.domain.notification.service.INotificationService;
 import com.dentify.domain.patientstat.model.PatientStat;
 import com.dentify.domain.patientstat.service.IPatientStatService;
-import com.dentify.domain.pay.enums.PaymentMethod;
-import com.dentify.domain.pay.model.Pay;
-import com.dentify.integration.email.EmailService;
+import com.dentify.domain.payment.enums.PaymentMethod;
+import com.dentify.domain.payment.model.TreatmentPayment;
+import com.dentify.integration.email.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Component
@@ -26,6 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AppointmentScheduler {
 
+    //services
     private final IAppointmentService appointmentService;
     private final INotificationService notificationService;
     private final IPatientStatService statService;
@@ -45,7 +45,7 @@ public class AppointmentScheduler {
         LocalDateTime twoDaysLater = today.plusDays(2);
 
         //Look for appointments that are scheduled, not confirmed, within today's date and the next two days.
-        List<Appointment> appointments = findReservedAppointmentsNotConfirmed(today, twoDaysLater);
+        List<Appointment> appointments = appointmentService.findReservedAppointmentsNotConfirmedWithDetails(today, twoDaysLater);
 
         for (Appointment appointment : appointments) {
 
@@ -77,7 +77,7 @@ public class AppointmentScheduler {
         LocalDateTime oneDayLater = today.plusDays(1);
 
         //Look for appointments that are scheduled, not confirmed, within today's date and the next two days.
-        List<Appointment> appointments = findReservedAppointmentsNotConfirmed(today, oneDayLater);
+        List<Appointment> appointments = appointmentService.findReservedAppointmentsNotConfirmedWithDetails(today, oneDayLater);
 
         for (Appointment appointment : appointments) {
 
@@ -98,25 +98,22 @@ public class AppointmentScheduler {
 
     /**
      * Verifica turnos no confirmados y cancela turnos si es necesario,
-     * Ejecuta cada hora
+     * Ejecuta desde 7am hasta 8pm
      */
-    @Scheduled(cron = "0 0 * * * ?")  // Cada hora
+    @Scheduled(cron = "0 0 7-20 * * *")
     @Transactional
     public void cancelUnconfirmedAppointments() {
         log.info("Verificando turnos no confirmados");
 
-        LocalTime now = LocalTime.now();
-        LocalTime next24Hours = now.plusHours(24);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime next24Hours = now.plusHours(24);
 
         //Search for scheduled appointments within the next 24 hours
-        List<Appointment> upcomingAppointments = appointmentService.findScheduledAppointmentsBetween(now, next24Hours);
+        List<Appointment> upcomingAppointments = appointmentService.findReservedAppointmentsNotConfirmedWithDetails(now, next24Hours);
 
         for (Appointment appointment : upcomingAppointments) {
 
-            if (appointment.getAttendanceConfirmed() == false) {
-
                 this.processAppointmentsWithLackOfConfirmation(appointment);
-            }
         }
     }
 
@@ -124,16 +121,13 @@ public class AppointmentScheduler {
 
         long remainingHours = calculateRemainingHours( appointment );
 
-        log.warn(" Appointment {} without payment - {} hours remaining", appointment.getId_appointment(), remainingHours);
+        log.warn(" Appointment {} without confirmation - {} hours remaining", appointment.getId_appointment(), remainingHours);
 
-        // tengo que implementar que cuando se registre un appointment -> se envia email con link de mercado pago a pagar)
+        if ( remainingHours <= 3 && !appointment.isInTerminalState() ) {
 
-        // 3 * 60 = 180
-        if ( remainingHours <= 180 ) {
+            log.error("Appointment {} cancellation due to non-confirmation", appointment.getId_appointment());
 
-            log.error("Appointment {} cancellation due to non-payment", appointment.getId_appointment());
-
-            appointmentService.cancelAppointment(AppointmentStatus.CANCELLED_BY_SYSTEM, appointment, "Payment not confirmed on time");
+            appointmentService.cancelAppointment( AppointmentStatus.CANCELLED_BY_SYSTEM, appointment, "Appointment not confirmed on time" );
 
             try {
                 emailService.sendAppointmentCancelledBySystem(appointment);
@@ -145,50 +139,59 @@ public class AppointmentScheduler {
     }
 
     /**
-     * Enviar recordatorio final si faltan menos de 3 horas para la cita,
-     * Ejecuta cada hora
+     * Enviar recordatorio final si faltan menos de 5 horas para la cita,
+     * Ejecuta cada 3 horas
      */
-    @Scheduled(cron = "0 0 * * * ?")  // Cada hora
+    @Scheduled(cron = "0 0 */3 * * ?")
     @Transactional
     public void sendFinalReminders() {
 
-        log.info("🔔 Ejecutando recordatorio final de 5 horas");
+        log.info("Running final 5-hour reminder");
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime fourHoursLater = now.plusHours(5);
 
         //Look for unconfirmed appointments within 3 to 4 hours from now
-        List<Appointment> appointments = findReservedAppointmentsNotConfirmed( now, fourHoursLater);
+        List<Appointment> appointments = appointmentService.findScheduledAppointmentsWithDetails( now, fourHoursLater);
 
-        for (Appointment appointment : appointments) {
+            for (Appointment appointment : appointments) {
 
-            processFinalAppointmentReminder( appointment, ReminderWindow.FIVE_HOURS);
-        }
+                processFinalAppointmentReminder(appointment);
+            }
     }
 
-    private void processFinalAppointmentReminder(Appointment appointment, ReminderWindow window) {
+    private void processFinalAppointmentReminder(Appointment appointment) {
 
-        //This is the last opportunity to confirm the appointment
+        TreatmentPayment payment = appointment.getPrimaryPayment();
 
-        Pay pay = appointment.getPrimaryPayment();
-
-        if (pay == null) {
-            log.warn("⚠️ Turno {} sin pago asociado", appointment.getId_appointment());
+        if (payment == null) {
+            log.warn("Appointment {} without associated payment", appointment.getId_appointment());
+            return;
+        }
+        if ( appointment.isCancelled() ) {
+            log.info("Appointment {} already cancelled, skipping reminder", appointment.getId_appointment());
             return;
         }
         try {
-            if ( pay.getPayment_method() == PaymentMethod.MERCADO_PAGO ){
+            if ( appointment.isNotConfirmed() ) {
 
-                //Appointment with pending MP -> Email with confirmation button + payment link
-                emailService.sendFinalConfirmationRemindingWithMercadoPago(appointment, pay, window);
+                if (payment.getPayment_method() == PaymentMethod.MERCADO_PAGO) {
 
-            }else if (pay.getPayment_method() == PaymentMethod.CASH ){
+                    //Appointment with pending MP -> Email with confirmation button + payment link
+                    emailService.sendFinalConfirmationRemindingWithMercadoPago(appointment, payment);
 
-                //Appointment with pending CASH -> Email with confirmation button only
-                emailService.sendFinalConfirmationReminder(appointment, window);
+                } else if (payment.getPayment_method() == PaymentMethod.CASH) {
+
+                    //Appointment with pending CASH -> Email with confirmation button only
+                    emailService.sendFinalConfirmationReminder(appointment);
+                }
+
+                log.info("Reminder sent for appointment {} ", appointment.getId_appointment());
             }
-
-            log.info("Reminder sent for appointment {} (window:{})", appointment.getId_appointment(), window);
+            else{
+                //Simple reminder, without a confirmation button or payment link
+                emailService.sendSimpleFinalConfirmationReminder(appointment);
+            }
 
         } catch (Exception e) {
             log.error("Error sending appointment reminder {}: {}",
@@ -198,7 +201,7 @@ public class AppointmentScheduler {
 
     private long calculateRemainingHours(Appointment appointment) {
 
-        LocalDateTime appointmentTime = LocalDateTime.of( appointment.getDate(), appointment.getStartTime() );
+        LocalDateTime appointmentTime = appointment.getAppointmentStart();
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -214,15 +217,15 @@ public class AppointmentScheduler {
     public void markNoShowsAndUpdatePatientStats() {
 
         LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
-        LocalDate today = LocalDate.now();
+        LocalDateTime today =  LocalDate.now().atStartOfDay();
 
-        List<Appointment> expiredAppointments = appointmentService.findByDateLessThanEqualAndAppointmentStatusIn(
+        List<Appointment> expiredAppointments = appointmentService.findByDateLessThanEqualAndAppointmentStatusInWithDetails(
                                                                      today,
                                                                      List.of(AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED) );
 
         for (Appointment appointment : expiredAppointments) {
 
-            LocalDateTime appointmentDateTime = appointment.getDate().atTime(appointment.getStartTime());
+            LocalDateTime appointmentDateTime = appointment.getAppointmentStart();
 
             //If an hour has already passed and the appointment start time is before that time -> markNoShow
             if ( appointmentDateTime.isBefore( oneHourAgo )  ) {
@@ -231,11 +234,11 @@ public class AppointmentScheduler {
 
                         appointmentService.markNoShow(appointment);
 
-                        PatientStat patientStat = statService.actualizeStatsFromPatient( appointment, appointment.getPatient());
+                        PatientStat patientStat = statService.actualizeStatsForNoShow( appointment, appointment.getPatient());
 
                         log.info("Paciente marcado como NO_SHOW | AppointmentID: {} | PatientID: {} | RiskLevel: {}", appointment.getId_appointment(),
                                                                                                                       appointment.getPatient().getId_patient(),
-                                                                                                                      patientStat.getRisk_level());
+                                                                                                                      patientStat.getRiskLevel());
 
                         this.categorizeWarningToSend(patientStat, appointment);
                     }
@@ -245,27 +248,15 @@ public class AppointmentScheduler {
 
     private void categorizeWarningToSend(PatientStat patientStat, Appointment appointment) {
 
-        if( patientStat.getTotal_no_shows() == 1){
-            emailService.sendFirstNoShowWarning( appointment);
-        }
-        if ( patientStat.getNo_shows_last_30_days() == 2){
-            emailService.sendSecondNoShowWarning( appointment);
-        }
-        if ( patientStat.getNo_shows_last_30_days() >= 3){
-            emailService.sendThirdNoShowWarning( appointment);
+        if ( patientStat.getTotalNoShows() == 1) {
+            emailService.sendFirstNoShowWarning(appointment);
+
+        } else if ( patientStat.getNoShowsLast30Days() == 2) {
+            emailService.sendSecondNoShowWarning(appointment);
+
+        } else if ( patientStat.getNoShowsLast90Days() >= 3) {
+            emailService.sendThirdNoShowWarning(appointment);
         }
     }
 
-    /**
-     * auxiliar method
-     * */
-    private List<Appointment> findReservedAppointmentsNotConfirmed(LocalDateTime today, LocalDateTime targetDate) {
-
-        return appointmentService.findReservedAppointmentsNotConfirmed(today, targetDate);
-    }
-
-    private List<Appointment> findReservedAppointmentsConfirmed(LocalTime startTime, LocalTime finalTime) {
-
-        return appointmentService.findReservedAppointmentsConfirmed( startTime, finalTime);
-    }
 }
