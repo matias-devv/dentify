@@ -1,8 +1,6 @@
 package com.dentify.calendar.controller;
 
 import com.dentify.calendar.dto.request.day.DetailedDayRequest;
-import com.dentify.calendar.dto.request.month.MonthRequest;
-import com.dentify.calendar.dto.request.week.WeekRequest;
 import com.dentify.calendar.dto.response.day.DetailedDayResponse;
 import com.dentify.calendar.dto.response.month.MonthResponse;
 import com.dentify.calendar.dto.response.week.WeekResponse;
@@ -24,8 +22,12 @@ public class CalendarController {
      **/
     @PreAuthorize("hasAnyRole('DENTIST','SECRETARY')")
     @GetMapping("/monthly/slots")
-    public ResponseEntity<MonthResponse> GetMonthlySummary(@RequestBody MonthRequest request) {
-        MonthResponse response = calendarService.getMonthlySummary(request);
+    public ResponseEntity<MonthResponse> GetMonthlySummary(@RequestParam Long id_agenda,
+                                                           @RequestParam(required = false) Long id_product,
+                                                           @RequestParam Integer year,
+                                                           @RequestParam Integer month_number) {
+
+        MonthResponse response = calendarService.getMonthlySummary(id_agenda, id_product, year, month_number);
         return ResponseEntity.ok().body(response);
     }
 
@@ -34,8 +36,12 @@ public class CalendarController {
     **/
     @PreAuthorize("hasAnyRole('DENTIST','SECRETARY')")
     @GetMapping("/weekly/slots")
-    public ResponseEntity<WeekResponse> getWeeklySlots( @RequestBody WeekRequest request) {
-        WeekResponse response = calendarService.getWeeklySlots(request);
+    public ResponseEntity<WeekResponse> getWeeklySlots( @RequestParam Long id_agenda,
+                                                        @RequestParam(required = false) Long id_product,
+                                                        @RequestParam String startDate,
+                                                        @RequestParam String endDate) {
+
+        WeekResponse response = calendarService.getWeeklySlots(id_agenda, id_product, startDate, endDate);
         return ResponseEntity.ok().body(response);
     }
 
