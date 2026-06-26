@@ -36,11 +36,17 @@ public class CalendarMapper {
     }
 
     public WeekResponse buildWeekResponse(Agenda agenda, List<DayResponse> dayResponses) {
+
+        Long idProduct = ( agenda.getProduct() != null) ? agenda.getProduct().getId_product() : null;
+        String productName =  ( agenda.getProduct() != null ) ? agenda.getProduct().getNameProduct() : null;
+
         return new WeekResponse(agenda.getId_agenda(),
-                agenda.getAgenda_name(),
-                agenda.getStart_date(),
-                agenda.getFinal_date(),
-                dayResponses);
+                                agenda.getAgenda_name(),
+                                idProduct,
+                                productName,
+                                agenda.getStart_date(),
+                                agenda.getFinal_date(),
+                                dayResponses);
     }
 
     public DetailedDayResponse buildDetailedDayResponse(Agenda agenda, List<DetailedSlotResponse> slots, LocalDate requestedDate,
