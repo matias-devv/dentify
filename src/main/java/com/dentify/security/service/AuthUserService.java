@@ -10,19 +10,13 @@ import com.dentify.security.dto.request.AuthLoginRequest;
 import com.dentify.security.dto.response.AuthResponse;
 import com.dentify.security.dto.response.LoginResult;
 import com.dentify.security.model.AuthUser;
-import com.dentify.security.model.RefreshToken;
 import com.dentify.security.model.Role;
 import com.dentify.security.repository.IAuthUserRepository;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -82,9 +76,9 @@ public class AuthUserService implements IAuthUserService {
 
         AuthUser authUser = this.findByUsernameWithProfileAndClinic( userRequest.email());
 
-        String   tenantId = this.resolveTenant(authUser);
+        String tenantId = this.resolveTenant(authUser);
 
-        String   accessToken = jwtUtils.createToken(authentication, tenantId);
+        String accessToken = jwtUtils.createToken(authentication, tenantId);
 
         AuthResponse body = new AuthResponse( userRequest.email(), "login successful", accessToken, tenantId, true);
 
