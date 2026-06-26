@@ -9,5 +9,6 @@ public class AuthUserNotFoundException extends RuntimeException implements AppEx
         super(message);
     }
 
+    @Override
     public String getErrorCode() { return errorCode; }
 }
