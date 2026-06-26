@@ -2,15 +2,19 @@ package com.dentify.domain.appointment.service;
 
 import com.dentify.domain.appointment.dto.response.AppointmentTodayResponse;
 import com.dentify.domain.appointment.dto.response.FullAppointmentResponse;
+import com.dentify.domain.appointment.event.AppointmentCreatedWithPaymentEvent;
+import com.dentify.domain.appointment.event.publisher.AppointmentEventPublisher;
 import com.dentify.domain.dentist.model.Dentist;
 import com.dentify.domain.dentist.service.IDentistService;
 import com.dentify.domain.mercadopagopayment.service.IMercadoPagoPaymentService;
+import com.dentify.domain.patientstat.service.IPatientStatService;
 import com.dentify.domain.payment.model.TreatmentPayment;
 import com.dentify.domain.userProfile.model.UserProfile;
 import com.dentify.domain.userProfile.service.IUserProfileService;
 import com.dentify.exception.appointment.AppointmentConflictException;
 import com.dentify.exception.appointment.AppointmentNotFoundException;
 import com.dentify.exception.appointment.AppointmentStateException;
+import com.dentify.exception.pay.PaymentRequiredException;
 import com.dentify.integration.email.service.IEmailService;
 import com.dentify.mapper.AppointmentMapper;
 import com.dentify.domain.agenda.model.Agenda;
@@ -39,6 +43,7 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -52,14 +57,14 @@ public class AppointmentService implements IAppointmentService {
     //services
     private final IEmailService emailService;
     private final ITreatmentService treatmentService;
-    private final ITreatmentPaymentService payService;
+    private final ITreatmentPaymentService paymentService;
     private final IPatientService patientService;
     private final IProductService productService;
     private final IDentistService dentistService;
     private final IAgendaService agendaService;
-    private final IMercadoPagoPaymentService mercadoPagoService;
     private final IUserProfileService userProfileService;
-
+    private final IPatientStatService patientStatService;
+    private final AppointmentEventPublisher eventPublisher;
     //mapper
     private final AppointmentMapper appointmentMapper;
 
@@ -70,6 +75,12 @@ public class AppointmentService implements IAppointmentService {
     public FullAppointmentResponse getAppointmentById(Long id) {
         Appointment appointment = appointmentRepository.findByIdWithAllDetails(id).orElseThrow(() -> new AppointmentNotFoundException("Appointment not found"));
         return appointmentMapper.toResponse(appointment);
+    }
+
+    @Override
+    public Appointment findByIdWithReceiptData(Long appointmentId) {
+        return appointmentRepository.findByIdWithReceiptData(appointmentId)
+                                    .orElseThrow(() -> new AppointmentNotFoundException("Appointment not found"));
     }
 
     @Override
@@ -136,32 +147,46 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public List<AppointmentTodayResponse> getAppointmentsTodayForDentist(String username) {
+    public Appointment findByIdWithAllEmailData(Long appointmentId) {
+        return appointmentRepository.findByIdWithAllEmailData(appointmentId)
+                                    .orElseThrow( ()-> new AppointmentNotFoundException("The appointment with this id was not found"));
+    }
+
+
+    @Override
+    public List<AppointmentTodayResponse> getAppointmentsByDayForDentist(String username, String requestDate) {
 
         Dentist dentist = dentistService.findDentistByAuthUserUsername(username);
 
         List<AppointmentTodayResponse> responses = new ArrayList<>();
 
-        List<Appointment> appointments = this.findDentistAppointmentsForDayWithDetails(dentist.getId(), List.of(AppointmentStatus.SCHEDULED,
-                                                                                                                AppointmentStatus.CONFIRMED,
-                                                                                                                AppointmentStatus.ADMITTED,
-                                                                                                                AppointmentStatus.IN_ATTENTION,
-                                                                                                                AppointmentStatus.COMPLETED,
-                                                                                                                AppointmentStatus.NO_SHOW));
+        LocalDateTime day = this.resolveActualDate(requestDate);
+
+        LocalDateTime endOfDay = day.with(LocalTime.MAX);
+
+        List<Appointment> appointments = appointmentRepository.findDentistAppointmentsForDayWithDetails(dentist.getId(),
+                                                                                                       day,
+                                                                                                       endOfDay ,
+                                                                                                       List.of(AppointmentStatus.SCHEDULED,
+                                                                                                               AppointmentStatus.CONFIRMED,
+                                                                                                               AppointmentStatus.ADMITTED,
+                                                                                                               AppointmentStatus.IN_ATTENTION,
+                                                                                                               AppointmentStatus.COMPLETED,
+                                                                                                               AppointmentStatus.NO_SHOW) );
 
         appointments.forEach(a -> { responses.add( appointmentMapper.buildAppointmentTodayResponse(a) ); } );
 
         return responses;
     }
 
-    @Override
-    public List<Appointment> findDentistAppointmentsForDayWithDetails(Long idDentist, List<AppointmentStatus> statuses) {
+    private LocalDateTime resolveActualDate(String date) {
 
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        if ( date != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
-
-        return appointmentRepository.findDentistAppointmentsForDayWithDetails(idDentist, startOfDay, endOfDay, statuses);
+            return LocalDate.parse(date, formatter).atStartOfDay();
+        }
+        return LocalDate.now().atStartOfDay();
     }
 
     @Override
@@ -177,37 +202,113 @@ public class AppointmentService implements IAppointmentService {
     @Transactional
     public CreateAppointmentResponseDTO saveAppointmentWithPay(CreateAppointmentRequestDTO request) {
 
-        Patient patient = patientService.findPatientById( request.id_patient() );
-        Dentist dentist = dentistService.findByIdWithProfileAndClinic( request.id_dentist() );
-        Product product = productService.findProductById( request.id_product(), dentist.getClinic().getId() );
-        Agenda agenda = agendaService.findAgendaWithDentistById( request.id_agenda() );
+        long startTime = System.currentTimeMillis();
+        log.info("⏱️  Starting appointment creation for patient: {}", request.id_patient());
 
-        agendaService.validatAgendaToCreateAppointment( agenda, dentist, request.date(), request.start_time());
+        Dentist dentist = dentistService.findByIdWithProfileAndClinic(request.id_dentist());
+        Product product = productService.findProductById(request.id_product(), dentist.getClinic().getId() );
+        Agenda agenda = agendaService.findAgendaWithSchedules(request.id_agenda());
+        Patient patient = patientService.findPatientById(request.id_patient());
 
-        productService.validateIfProductIsActive( product.getActive() );
+        //validations
+        this.validateCashPaymentMethodFromRequest(request);
 
-        this.validateAppointmentAvailability( request.date(), request.start_time(), request.duration_minutes(), dentist.getId());
+        agendaService.validatAgendaToCreateAppointment(agenda, dentist, request.date(), request.start_time());
 
-        Treatment treatment = treatmentService.findOrCreateTreatment( patient, product, dentist);
+        productService.validateIfProductIsActive(product.getActive());
 
-        Appointment appointment = appointmentMapper.buildAppointment( patient, treatment, request, dentist, agenda);
+        this.validateAppointmentAvailability(request.date(), request.start_time(), request.duration_minutes(), dentist.getId());
 
-        appointmentRepository.saveAndFlush(appointment);
+        //create treatment and appointment
+        Treatment treatment = treatmentService.findOrCreateTreatment(patient, product, dentist);
 
-        TreatmentPayment payment = payService.savePayment( appointment, treatment, request, product);
+        Appointment appointment = appointmentMapper.buildAppointment(patient, request, treatment, dentist, agenda);
 
-        String paymentLink = null;
+        appointmentRepository.save(appointment);
 
-        if ( request.paymentMethod() == PaymentMethod.MERCADO_PAGO ) {
-            paymentLink = mercadoPagoService.handleMercadoPagoPayment(payment, appointment);
-        }
+        boolean payNow = (request.payNow() != null) ? request.payNow() : false;
 
-        if ( request.paymentMethod() == PaymentMethod.CASH ) {
-            payService.handleCashPayment(request, treatment, payment, appointment);
-        }
+        TreatmentPayment payment = paymentService.handlePaymentCreation(appointment, treatment, request.paymentMethod(), product.getUnitPrice(), payNow);
 
-        return appointmentMapper.buildCreateAppointmentResponse( product, payment, request, appointment, paymentLink);
+        //publish async event
+        publishAppointmentEvent(appointment, treatment, patient, dentist, product, payNow, payment);
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("✅ Appointment created in {}ms (events published async)", duration);
+
+        return appointmentMapper.buildCreateAppointmentResponse( product, payment, request, appointment);
     }
+
+    private void validateCashPaymentMethodFromRequest(CreateAppointmentRequestDTO request) {
+        if (request.paymentMethod() == PaymentMethod.CASH) {
+            if ( request.payNow() == null ) {
+                throw new PaymentRequiredException("For cash payments, 'payNow' must be specified");
+            }
+        }
+    }
+
+    /**
+     * Construye y publica el evento asincronó
+     *
+     * El evento contiene TODOS los datos necesarios para el background job
+     */
+    private void publishAppointmentEvent(Appointment appointment, Treatment treatment, Patient patient, Dentist dentist, Product product,
+                                         boolean payNow, TreatmentPayment payment) {
+        try {
+            //  logica para el paso 6 en el listener( no generar pdfs ni enviar emails
+            AppointmentCreatedWithPaymentEvent event = AppointmentCreatedWithPaymentEvent.builder()
+                    // Appointment data
+                    .appointmentId(appointment.getId_appointment())
+                    .appointmentDate(appointment.getAppointmentStart().toLocalDate())
+                    .appointmentStartTime(appointment.getAppointmentStart().toLocalTime())
+                    .appointmentEndTime(appointment.getAppointmentEnd().toLocalTime())
+                    .appointmentNotes(appointment.getNotes())
+                    .appointmentStatus(appointment.getAppointmentStatus())
+                    .durationMinutes(appointment.getDuration_minutes())
+
+                    // Payment data
+                    .paymentId(payment.getId_pay())
+                    .paymentMethod( payment.getPayment_method() )
+                    .paymentAmount( payment.getAmount())
+                    .isPaymentImmediate(payNow)
+
+                    // Patient data
+                    .patientEmail(patient.getEmail())
+                    .patientName(patient.getName())
+                    .patientSurname(patient.getSurname())
+                    .patientDni(patient.getDni())
+                    .patientInstructions(appointment.getPatient_instructions())
+
+                    // Dentist data
+                    .dentistName(dentist.getUserProfile().getName())
+                    .dentistSurname(dentist.getUserProfile().getSurname())
+                    .dentistEmail(dentist.getUserProfile().getAuthUser().getUsername())
+                    .dentistPhone( (dentist.getUserProfile().getPhone_number() != null) ? dentist.getUserProfile().getPhone_number() : null)
+                    .clinicName(dentist.getClinic().getName())
+                    .tenantId( dentist.getClinic().getTenantId())
+
+                    // Product data
+                    .productName(product.getNameProduct())
+                    .productDescription(product.getDescription())
+
+                    //treatment
+                    .treatmentId( treatment.getId_treatment())
+
+                    // Control flag
+                    .shouldConfirmAppointment( payment.isInCash()  && payNow)   // Confirmar appointment si pago inmediato
+
+                    .createdAtMillis(System.currentTimeMillis())
+                    .build();
+
+            log.info("📢 Publishing async event for appointment: {}", appointment.getId_appointment());
+            eventPublisher.publishAppointmentCreatedWithPay(event);
+
+        } catch (Exception e) {
+            log.error("❌ Error publishing appointment event", e);
+            // NO relanzar: el appointment ya existe, solo fallaron las notificaciones
+        }
+    }
+
 
     @Override
     public void actualizeAppointmentStatusToConfirmed(Appointment appointment) {
@@ -248,6 +349,8 @@ public class AppointmentService implements IAppointmentService {
             }
 
             appointment.setAppointmentStatus(AppointmentStatus.ADMITTED);
+
+            patientStatService.recordAdmission( appointment.getPatient().getPatient_stat() );
 
             appointmentRepository.save(appointment);
 
@@ -342,7 +445,7 @@ public class AppointmentService implements IAppointmentService {
 
         TreatmentPayment payment = appointment.getPrimaryPayment();
 
-        payService.actualizePaymentStatusToCancelled(payment);
+        paymentService.actualizePaymentStatusToCancelled(payment);
 
         appointment.setReason_for_cancellation(request.reason_for_cancellation());
 
@@ -413,5 +516,10 @@ public class AppointmentService implements IAppointmentService {
         appointmentRepository.save(appointment);
 
         return appointmentMapper.buildAppointmentTodayResponse(appointment);
+    }
+
+    @Override
+    public void persistAppointment(Appointment appointment) {
+        appointmentRepository.save(appointment);
     }
 }
