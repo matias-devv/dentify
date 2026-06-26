@@ -1,10 +1,10 @@
 package com.dentify.domain.appointment.event.listener;
 
 import com.dentify.domain.appointment.event.AppointmentCreatedWithPaymentEvent;
-import com.dentify.domain.appointment.enums.AppointmentStatus;
 import com.dentify.domain.appointment.model.Appointment;
 import com.dentify.domain.appointment.service.IAppointmentService;
 import com.dentify.domain.mercadopagopayment.service.IMercadoPagoPaymentService;
+import com.dentify.domain.patientstat.service.IPatientStatService;
 import com.dentify.domain.payment.model.TreatmentPayment;
 import com.dentify.domain.payment.service.ITreatmentPaymentService;
 import com.dentify.domain.receipt.model.Receipt;
@@ -17,6 +17,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+
+import java.time.LocalDateTime;
 
 /**
  * ✅ ASYNC EVENT LISTENER
@@ -43,6 +45,7 @@ public class AppointmentNotificationListener {
     private final IAppointmentService appointmentService;
     private final ITreatmentPaymentService paymentService;
     private final IMercadoPagoPaymentService mercadoPagoPaymentService;
+    private final IPatientStatService statService;
 
     /**
      * 🎯 Entry point: Se ejecuta ASINCRONAMENTE cuando se publica el evento
@@ -58,26 +61,22 @@ public class AppointmentNotificationListener {
         try {
             log.info("⏳ [ASYNC] Starting background processing for appointment: {}", event.getAppointmentId());
 
-            // PASO 1: BUSCAR APPOINTMENT
             Appointment appointment = appointmentService.findByIdWithAllEmailData(event.getAppointmentId());
 
-            // PASO 2. BUSCAR PAYMENT
             TreatmentPayment payment = paymentService.findByIdForPaymentProcessing(event.getPaymentId() );
 
-            //PASO 4: CREAR MP SI ES EL CASO
+            //generate mercadoPagoPayment entity if the payment method is mercado pago
             this.handleMercadoPagoPaymentOption( appointment, payment);
 
-            // PASO 5: Generar recibo (si es pago inmediato) ( puede ser null)
+            //generate receipt if the payment is now
             Receipt receipt = this.handleReceiptGeneration( appointment, payment, event.getIsPaymentImmediate());
 
-            // PASO 6: Enviar emails (operaciones en paralelo)
-            log.info("📧 Sending emails for appointment: {}", event.getAppointmentId());
+            //send emails ( deberia ser en paralelo)
             sendEmailsInParallel( appointment, payment, event.getIsPaymentImmediate(), receipt);
 
-            // PASO 7: Actualizar appointment status a CONFIRMED (si corresponde)
-            this.handleAppointmentConfirmation(event.getShouldConfirmAppointment(), appointment);
-
-            this.handlePatientStats(event.getShouldConfirmAppointment(), appointment);
+            // if corresponds appointmentStatus -> confirmed
+            // update patient stats
+            this.confirmAppointmentAndUpdateStats(event.getShouldConfirmAppointment(), appointment);
 
             long totalTime = System.currentTimeMillis() - startTime;
             log.info("total time transaction: {}", totalTime);
@@ -130,13 +129,10 @@ public class AppointmentNotificationListener {
     }
 
     /**
-     * Envía todos los emails en paralelo utilizando CompletableFuture
-     * o threads separados
+     * Envía todos los emails en paralelo threads separados
      */
     private void sendEmailsInParallel( Appointment appointment, TreatmentPayment payment, boolean payNow, Receipt receipt) {
         try {
-            // Aquí usamos @Async en métodos privados o CompletableFuture
-            // para paralelizar los 4 emails
 
             if ( payment.isInCash() && payNow ) {
                 // CASE: CASH + payNow = true
@@ -213,26 +209,24 @@ public class AppointmentNotificationListener {
         }
     }
 
-    private void handleAppointmentConfirmation(Boolean shouldConfirmAppointment, Appointment appointment) {
+    private void confirmAppointmentAndUpdateStats(Boolean shouldConfirmAppointment, Appointment appointment) {
 
         try {
 
             if ( shouldConfirmAppointment == true ) {
 
-                appointment.setAppointmentStatus(AppointmentStatus.CONFIRMED);
+                appointment.recordNewConfirmation();
 
                 appointmentService.persistAppointment(appointment);
 
                 log.info("✅ Appointment {} status updated to CONFIRMED", appointment.getId_appointment());
             }
 
+            statService.actualizeStatForNewAppointment( appointment.getPatient().getPatient_stat(), appointment.getAppointmentStart(), shouldConfirmAppointment);
+
         } catch (Exception e) {
             log.error("❌ Error updating appointment status", e);
         }
-    }
-
-
-    private void handlePatientStats(Boolean shouldConfirmAppointment, Appointment appointment) {
     }
 
 }
