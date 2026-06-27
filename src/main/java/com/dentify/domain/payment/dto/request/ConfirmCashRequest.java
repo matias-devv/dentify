@@ -1,4 +1,4 @@
-package com.dentify.domain.pay.dto.request;
+package com.dentify.domain.payment.dto.request;
 
 import java.math.BigDecimal;
 
