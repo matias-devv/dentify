@@ -22,7 +22,6 @@ public record CreateAppointmentResponseDTO(Long id_appointment,
                                            // Payment info
                                            BigDecimal amount_to_pay,
                                            PaymentMethod payment_method,
-                                           String payment_link,
 
                                            // Status
                                            AppointmentStatus appointment_status,
