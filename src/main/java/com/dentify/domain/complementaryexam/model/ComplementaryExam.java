@@ -61,6 +61,6 @@ public class ComplementaryExam {
 
     /** UserProfile who uploaded the file. */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "uploadBy", nullable = false)
+    @JoinColumn(name = "upload_by", nullable = false)
     private UserProfile uploadBy;
 }
