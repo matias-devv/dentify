@@ -93,4 +93,34 @@ public class CloudinaryService implements ICloudinaryService {
             // If the file doesn't exist, Cloudinary returns "not found" but doesn't fail.
         }
     }
+
+    /**
+     * Builds a Cloudinary download URL by inserting the fl_attachment
+     * flag into the stored URL, forcing browser download instead of render.
+     *
+     * Stored:   .../raw/upload/v123/odontologia/comprobantes/receipts/file
+     * Download: .../raw/upload/fl_attachment/v123/odontologia/comprobantes/receipts/file
+     *
+     * @param storedUrl url_pdf persisted in Receipt entity
+     * @return ready-to-use download URL
+     */
+    @Override
+    public String buildDownloadUrl(String storedUrl) {
+
+        if ( storedUrl == null || storedUrl.isBlank() ) {
+            throw new IllegalArgumentException("Cannot build download URL: stored URL is empty");
+        }
+
+        String UPLOAD_SEGMENT = "/upload/";
+
+        int insertionIndex = storedUrl.indexOf(UPLOAD_SEGMENT);
+
+        if (insertionIndex == -1) {
+            throw new IllegalArgumentException("Cannot build download URL: unexpected Cloudinary URL format -> " + storedUrl);
+        }
+
+        int afterUpload = insertionIndex + UPLOAD_SEGMENT.length();
+
+        return storedUrl.substring(0, afterUpload) + "fl_attachment/" + storedUrl.substring(afterUpload);
+    }
 }
