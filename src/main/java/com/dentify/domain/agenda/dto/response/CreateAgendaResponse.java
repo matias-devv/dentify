@@ -8,6 +8,7 @@ import java.util.List;
 public record CreateAgendaResponse(Long id_agenda,
                                    String agenda_name,
                                    String dentist_full_name,
+                                   Long dentist_id,
                                    Boolean active,
                                    LocalDate start_date,
                                    LocalDate final_date,
