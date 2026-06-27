@@ -3,6 +3,7 @@ package com.dentify.domain.clinic.service;
 import com.dentify.domain.clinic.dto.ClinicData;
 import com.dentify.domain.clinic.model.Clinic;
 import com.dentify.domain.clinic.repository.IClinicRepository;
+import com.dentify.exception.clinic.ClinicConflictException;
 import com.dentify.exception.clinic.ClinicCuitAlreadyExistsException;
 import com.dentify.exception.clinic.ClinicEmailAlreadyExistsException;
 import com.dentify.exception.clinic.ClinicNotFoundException;
@@ -64,6 +65,15 @@ public class ClinicService implements IClinicService {
         }
         if ( clinicRepository.existsByEmail( data.clinicEmail() ) ) {
             throw new ClinicEmailAlreadyExistsException("The email assigned to this new clinic already exists.");
+        }
+    }
+
+
+    @Override
+    public void verifyIfTheyBelongToTheSameClinic(Long firstClinicId, Long secondClinicId) {
+
+        if ( !firstClinicId.equals( secondClinicId ) ) {
+            throw new ClinicConflictException("The patient does not belong to the dentist's clinic");
         }
     }
 }
