@@ -16,8 +16,9 @@ import com.dentify.domain.medicalhistory.repository.IMedicalHistoryRepository;
 import com.dentify.domain.patient.model.Patient;
 import com.dentify.domain.patient.service.IPatientService;
 import com.dentify.domain.patientallergy.dto.response.PatientAllergyDetailResponse;
-import com.dentify.domain.patientallergy.dto.response.PatientAllergyResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
+import com.dentify.domain.toothrecord.model.ToothRecord;
+import com.dentify.domain.toothrecord.service.IToothRecordService;
 import com.dentify.exception.allergycatalog.AllergiesCatalogNotFoundException;
 import com.dentify.exception.medicalhistory.MedicalHistoryNotFoundException;
 import com.dentify.exception.medicalhistory.OdontogramTypeConflictException;
@@ -49,6 +50,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
     private final IPatientService patientService;
     private final IAllergyCatalogService allergyCatalogService;
     private final IClinicService clinicService;
+    private final IToothRecordService toothRecordService;
 
     //mappers
     private final MedicalHistoryMapper mapper;
@@ -71,6 +73,17 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
             medicalHistory.addAllergies( allergies );
         }
+
+        List<ToothRecord> toothRecords;
+
+        if ( request.getToothRecords() != null && !request.getToothRecords().isEmpty() ) {
+
+            toothRecords = toothRecordService.buildToothRecordsForMedicalHistory(request.getToothRecords(), request.getOdontogramType(),
+                                                                                 dentist.getClinic().getId(), medicalHistory);
+
+            medicalHistory.setToothRecords(toothRecords);
+        }
+
         medicalHistoryRepository.save( medicalHistory );
 
         return mapper.buildCreateMedicalHistoryResponse(medicalHistory);
@@ -184,7 +197,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
     @Override
     @Transactional
-    public EditMedicalHistoryResponse editMedicalHistory(EditMedicalHistoryRequest request, String username, Long patientId, Long medicalHistoryId) {
+    public EditMedicalHistoryResponse updateMedicalHistory(EditMedicalHistoryRequest request, String username, Long patientId, Long medicalHistoryId) {
 
         Dentist dentist = dentistService.findDentistByAuthUserUsername(username);
 
