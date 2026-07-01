@@ -19,6 +19,7 @@ import com.dentify.domain.patientallergy.dto.response.PatientAllergyDetailRespon
 import com.dentify.domain.patientallergy.dto.response.PatientAllergyResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
 import com.dentify.domain.toothrecord.dto.response.ToothRecordResponse;
+import com.dentify.domain.toothrecord.enums.OdontogramType;
 import com.dentify.domain.toothrecord.model.ToothRecord;
 import com.dentify.domain.userProfile.dto.response.SimpleUserProfileResponse;
 import com.dentify.domain.userProfile.model.UserProfile;
@@ -45,11 +46,13 @@ public class MedicalHistoryMapper {
                             .build();
     }
 
-    public CreateMedicalHistoryResponse buildCreateMedicalHistoryResponse(MedicalHistory medicalHistory) {
+public CreateMedicalHistoryResponse buildCreateMedicalHistoryResponse(MedicalHistory medicalHistory) {
 
         List<PatientAllergyResponse> allergyResponseList = ( medicalHistory.getAllergies() != null ) ?
-                                                                                          this.buildPatientAllergyResponseList( medicalHistory.getAllergies() )
-                                                                                          : null;
+                                                                                           this.buildPatientAllergyResponseList( medicalHistory.getAllergies() )
+                                                                                           : null;
+
+        List<ToothRecordResponse> toothRecordResponseList = ToothRecordMapper.toResponseList(medicalHistory.getToothRecords());
 
         return new CreateMedicalHistoryResponse(medicalHistory.getId(),
                                                 medicalHistory.getStartDate(),
@@ -65,7 +68,8 @@ public class MedicalHistoryMapper {
                                                 medicalHistory.getPatient().getId_patient(),
                                                 medicalHistory.getPatient().getName(),
                                                 medicalHistory.getPatient().getSurname(),
-                                                LocalDateTime.now() );
+                                                LocalDateTime.now(),
+                                                toothRecordResponseList);
     }
 
     private List<PatientAllergyResponse> buildPatientAllergyResponseList(List<PatientAllergy> allergies) {
@@ -237,11 +241,12 @@ public class MedicalHistoryMapper {
 
     public MedicalHistory setNewAttributes(EditMedicalHistoryRequest request, MedicalHistory medicalHistory) {
 
-        if ( request.pastMedicalHistory() != null ) medicalHistory.setPastMedicalHistory( request.pastMedicalHistory() );
-        if ( request.observations() != null ) medicalHistory.setPastMedicalHistory( request.observations() );
-        if ( request.hasAllergies() != null ) medicalHistory.setHasAllergies( request.hasAllergies() );
-        if ( request.dailyMedication() != null ) medicalHistory.setDailyMedication( request.dailyMedication() );
-        if ( request.odontogramType() != null ) medicalHistory.setOdontogramType( request.odontogramType() );
+        if( request.pastMedicalHistory() != null )  medicalHistory.setPastMedicalHistory( request.pastMedicalHistory() );
+        if( request.observations() != null ) medicalHistory.setObservations( request.observations() );
+        if( request.dailyMedication() != null ) medicalHistory.setDailyMedication( request.dailyMedication() );
+        if( request.hasAllergies() != null ) medicalHistory.setHasAllergies( request.hasAllergies() );
+        if( request.odontogramType() != null  ) medicalHistory.setOdontogramType( request.odontogramType() );
+
         return medicalHistory;
     }
 
