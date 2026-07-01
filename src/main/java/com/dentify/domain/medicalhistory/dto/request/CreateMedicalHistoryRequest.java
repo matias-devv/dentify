@@ -1,6 +1,8 @@
 package com.dentify.domain.medicalhistory.dto.request;
 
+import com.dentify.domain.toothrecord.dto.request.CreateToothRecordItem;
 import com.dentify.domain.toothrecord.enums.OdontogramType;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -33,9 +35,11 @@ public class CreateMedicalHistoryRequest {
     @NotNull(message = "The medical record to be kept needs to know if the patient has allergies or not.")
     private Boolean hasAllergies = false;
 
+    @Valid
+    private List<CreateToothRecordItem> toothRecords = List.of(); // optional; each item validated individually if present
+
     private List<Long> allergyIds = List.of(); // IDs of AllergyCatalog; ignored if hasAllergies = false
 
     @Size(max = 1000, message = "daily medication must be at most 1000 characters")
     private String dailyMedication;        // nullable
-
 }
