@@ -16,8 +16,8 @@ import java.util.Map;
 @Component
 public class ToothRecordMapper {
 
-    public List<ToothRecord> buildToothRecordList( List<CreateToothRecordItem> toothRecordItems, Map<Long, DiagnosisTypeCatalog> resolvedDiagnoses,
-                                                   MedicalHistory medicalHistory ) {
+    public List<ToothRecord> buildToothRecordList( List<CreateToothRecordItem> toothRecordItems,
+                                                   Map<Long, DiagnosisTypeCatalog> resolvedDiagnoses, MedicalHistory medicalHistory ) {
 
         List<ToothRecord> records = new ArrayList<>();
 
@@ -27,25 +27,39 @@ public class ToothRecordMapper {
 
             for ( Integer pieceNumber : item.getPieceNumbers() ) {
 
-                ToothRecord record = ToothRecord.builder()
-                                                .pieceNumber(pieceNumber)
-                                                .recordType(item.getRecordType())
-                                                .face(item.getFace())
-                                                .observations(item.getObservations())
-                                                .diagnosisType(diagnosis)
-                                                .medicalHistory(medicalHistory)
-                                                .build();
+                ToothRecord record = this.buildToothRecordObject(item, pieceNumber, diagnosis, medicalHistory);
+
                 records.add(record);
             }
         }
         return records;
     }
 
+    private ToothRecord buildToothRecordObject(CreateToothRecordItem item, Integer pieceNumber, DiagnosisTypeCatalog diagnosis, MedicalHistory medicalHistory) {
+        return ToothRecord.builder()
+                          .pieceNumber(pieceNumber)
+                          .recordType(item.getRecordType())
+                          .face(item.getFace())
+                          .observations(item.getObservations())
+                          .diagnosisType(diagnosis)
+                          .medicalHistory(medicalHistory)
+                          .build();
+    }
+
+    public List<ToothRecordResponse> toResponseList(List<ToothRecord> records) {
+
+        if ( records == null ) return Collections.emptyList();
+
+        List<ToothRecordResponse> responseList = new ArrayList<>( records.size() );
+
+        records.forEach( record -> responseList.add( toResponse(record) ) );
+
+        return responseList;
+    }
+
     public ToothRecordResponse toResponse(ToothRecord record) {
 
-        if (record == null) {
-            return null;
-        }
+        if (record == null) return null;
 
         DiagnosisTypeCatalogResponse diagnosisResponse = ( record.getDiagnosisType() != null ) ? this.buildTypeCatalogResponse( record.getDiagnosisType() ) : null;
 
@@ -56,21 +70,6 @@ public class ToothRecordMapper {
                                         record.getObservations(),
                                         record.getCreatedAt().toString(),
                                         diagnosisResponse );
-    }
-
-    public List<ToothRecordResponse> toResponseList(List<ToothRecord> records) {
-
-        if (records == null) {
-            return Collections.emptyList();
-        }
-
-        List<ToothRecordResponse> responseList = new ArrayList<>(records.size());
-
-        for (ToothRecord record : records) {
-            responseList.add(toResponse(record));
-        }
-
-        return responseList;
     }
 
     private DiagnosisTypeCatalogResponse buildTypeCatalogResponse(DiagnosisTypeCatalog catalog) {
