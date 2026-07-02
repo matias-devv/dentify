@@ -19,10 +19,10 @@ import com.dentify.domain.patientallergy.dto.response.PatientAllergyDetailRespon
 import com.dentify.domain.patientallergy.dto.response.PatientAllergyResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
 import com.dentify.domain.toothrecord.dto.response.ToothRecordResponse;
-import com.dentify.domain.toothrecord.enums.OdontogramType;
 import com.dentify.domain.toothrecord.model.ToothRecord;
 import com.dentify.domain.userProfile.dto.response.SimpleUserProfileResponse;
 import com.dentify.domain.userProfile.model.UserProfile;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -30,7 +30,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class MedicalHistoryMapper {
+
+    private final ToothRecordMapper toothRecordMapper;
 
     public MedicalHistory buildMedicalHistory(Dentist dentist, Patient patient, CreateMedicalHistoryRequest request) {
         return MedicalHistory.builder()
@@ -46,13 +49,13 @@ public class MedicalHistoryMapper {
                             .build();
     }
 
-public CreateMedicalHistoryResponse buildCreateMedicalHistoryResponse(MedicalHistory medicalHistory) {
+    public CreateMedicalHistoryResponse buildCreateMedicalHistoryResponse(MedicalHistory medicalHistory) {
 
         List<PatientAllergyResponse> allergyResponseList = ( medicalHistory.getAllergies() != null ) ?
                                                                                            this.buildPatientAllergyResponseList( medicalHistory.getAllergies() )
                                                                                            : null;
 
-        List<ToothRecordResponse> toothRecordResponseList = ToothRecordMapper.toResponseList(medicalHistory.getToothRecords());
+        List<ToothRecordResponse> toothRecordResponseList = toothRecordMapper.toResponseList(medicalHistory.getToothRecords());
 
         return new CreateMedicalHistoryResponse(medicalHistory.getId(),
                                                 medicalHistory.getStartDate(),
