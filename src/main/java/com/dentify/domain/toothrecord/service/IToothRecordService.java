@@ -1,6 +1,6 @@
 package com.dentify.domain.toothrecord.service;
 
-import com.dentify.domain.diagnosistypecatalog.exception.DiagnosisTypeNotFoundException;
+import com.dentify.exception.diagnosistypecatalog.DiagnosisTypeNotFoundException;
 import com.dentify.domain.toothrecord.dto.request.CreateToothRecordItem;
 import com.dentify.domain.toothrecord.enums.OdontogramType;
 import com.dentify.exception.toothrecord.InvalidPieceNumberException;
@@ -15,7 +15,7 @@ public interface IToothRecordService {
      * Builds and validates tooth records for a medical history from raw create requests.
      * <p>
      * The method assumes that `toothRecordItems` is non-null and non-empty when invoked.
-     * This responsibility lies with the caller (see Task 06), which must skip the call
+     * This responsibility lies with the caller, which must skip the call
      * for null or empty input.
      * <p>
      * For each item in `toothRecordItems`, the method creates one or more `ToothRecord`
@@ -27,8 +27,7 @@ public interface IToothRecordService {
      *   <li>`MIX`: union of both ranges</li>
      * </ul>
      * <p>
-     * Each tooth record is validated for a resolvable `DiagnosisTypeCatalog` entry,
-     * where non-global entries must belong to the authenticated dentist's `clinic_id`.
+     * Each tooth record is validated for a resolvable `DiagnosisTypeCatalog` entry, where non-global entries must belong to the authenticated dentist's `clinic_id`.
      * <p>
      * The constructed records receive the back‑reference to their parent
      * `MedicalHistory` aggregate and are returned with `diagnosisType` already
@@ -49,7 +48,7 @@ public interface IToothRecordService {
      * @throws DiagnosisTypeNotFoundException if a referenced diagnosis type cannot be resolved
      * @throws InvalidPieceNumberException if any piece number falls outside the valid FDI range
      */
-    List<ToothRecord> buildToothRecordsForMedicalHistory(List<CreateToothRecordItem> toothRecordItems, OdontogramType odontogramType,
-                                                         Long clinicId, MedicalHistory medicalHistory);
+    List<ToothRecord> buildToothRecordsForMedicalHistory(List<CreateToothRecordItem> toothRecordItems, OdontogramType odontogramType, Long clinicId,
+                                                         MedicalHistory medicalHistory);
 
 }
