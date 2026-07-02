@@ -17,9 +17,9 @@ import com.dentify.domain.patient.model.Patient;
 import com.dentify.domain.patient.service.IPatientService;
 import com.dentify.domain.patientallergy.dto.response.PatientAllergyDetailResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
+import com.dentify.domain.patientallergy.service.IPatientAllergyService;
 import com.dentify.domain.toothrecord.model.ToothRecord;
 import com.dentify.domain.toothrecord.service.IToothRecordService;
-import com.dentify.exception.allergycatalog.AllergiesCatalogNotFoundException;
 import com.dentify.exception.medicalhistory.MedicalHistoryNotFoundException;
 import com.dentify.exception.medicalhistory.OdontogramTypeConflictException;
 import com.dentify.exception.patient.PatientNotFoundException;
@@ -34,8 +34,6 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +46,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
     //services
     private final IDentistService dentistService;
     private final IPatientService patientService;
-    private final IAllergyCatalogService allergyCatalogService;
+    private final IPatientAllergyService patientAllergyService;
     private final IClinicService clinicService;
     private final IToothRecordService toothRecordService;
 
@@ -56,61 +54,42 @@ public class MedicalHistoryService implements IMedicalHistoryService {
     private final MedicalHistoryMapper mapper;
     private final PatientAllergyMapper patientAllergyMapper;
 
+
     @Override
     public CreateMedicalHistoryResponse createMedicalHistory(Long patientId, String username, CreateMedicalHistoryRequest request) {
 
-        Dentist dentist = dentistService.findDentistByAuthUserUsername(username);
+        Dentist dentist = dentistService.findDentistByAuthUserUsername( username );
 
-        Patient patient = patientService.findPatientByIdAndClinicId(patientId, dentist.getClinic().getId() );
+        Patient patient = patientService.findPatientByIdAndClinicId( patientId, dentist.getClinic().getId() );
 
-        MedicalHistory medicalHistory = mapper.buildMedicalHistory(dentist, patient, request);
+        MedicalHistory medicalHistory = mapper.buildMedicalHistory( dentist, patient, request );
 
-        List<PatientAllergy> allergies;
+        this.handleAllergies( request, medicalHistory );
 
-        if ( request.getHasAllergies() && request.getAllergyIds() != null && !request.getAllergyIds().isEmpty() ){
-
-            allergies = this.processAllergies( request.getAllergyIds(), medicalHistory );
-
-            medicalHistory.addAllergies( allergies );
-        }
-
-        List<ToothRecord> toothRecords;
-
-        if ( request.getToothRecords() != null && !request.getToothRecords().isEmpty() ) {
-
-            toothRecords = toothRecordService.buildToothRecordsForMedicalHistory(request.getToothRecords(), request.getOdontogramType(),
-                                                                                 dentist.getClinic().getId(), medicalHistory);
-
-            medicalHistory.setToothRecords(toothRecords);
-        }
+        this.handleToothRecords( request, medicalHistory, dentist.getClinic().getId() );
 
         medicalHistoryRepository.save( medicalHistory );
 
-        return mapper.buildCreateMedicalHistoryResponse(medicalHistory);
+        return mapper.buildCreateMedicalHistoryResponse( medicalHistory );
     }
 
-    private List<PatientAllergy> processAllergies( List<Long> allergyIds, MedicalHistory medicalHistory) {
+    private void handleAllergies(CreateMedicalHistoryRequest request, MedicalHistory medicalHistory) {
 
-        List<AllergyCatalog> allergiesFromCatalog = allergyCatalogService.findAllergiesWithThisIds( allergyIds );
+        if( request.getHasAllergies() && request.getAllergyIds() != null && !request.getAllergyIds().isEmpty() ){
 
-        this.validateAllRequestedAllergiesWereFound( allergyIds, allergiesFromCatalog );
+            List<PatientAllergy> allergies =  patientAllergyService.processAllergies( request, medicalHistory);
 
-        return patientAllergyMapper.buildPatientAllergyList(allergiesFromCatalog, medicalHistory);
+            medicalHistory.addAllergies( allergies );
+        }
     }
 
-    private void validateAllRequestedAllergiesWereFound(List<Long> requestedIds, List<AllergyCatalog> foundAllergies) {
+    private void handleToothRecords( CreateMedicalHistoryRequest request, MedicalHistory medicalHistory, Long clinicId ) {
 
-        Set<Long> foundIds = foundAllergies.stream()
-                                            .map(AllergyCatalog::getId)
-                                            .collect(Collectors.toSet());
+        if ( request.getToothRecords() != null && !request.getToothRecords().isEmpty() ) {
 
-        List<Long> missingIds = requestedIds.stream()
-                                            .filter(id -> !foundIds.contains(id))
-                                            .toList();
-
-        if ( !missingIds.isEmpty() ) {
-
-            throw new AllergiesCatalogNotFoundException("Some allergy ids were not found or are inactive: " + missingIds );
+            List<ToothRecord> toothRecords = toothRecordService.buildToothRecordsForMedicalHistory( request.getToothRecords(), request.getOdontogramType(),
+                                                                                                    clinicId, medicalHistory);
+            medicalHistory.addToothRecords(toothRecords);
         }
     }
 
