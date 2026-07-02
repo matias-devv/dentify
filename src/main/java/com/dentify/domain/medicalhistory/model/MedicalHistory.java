@@ -12,16 +12,14 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Represents one clinical evolution record for a patient.
- * A patient may have multiple HistorialClinico entries across time.
- * <p>
- * Replaces the deprecated {@code Diagnosticos} entity entirely.
- * </p>
+ * A patient may have multiple MedicalHistory entries across time.
  *
- * <b>Inherited from TenantEntity:</b> id, tenantId, clinic (clinic_id FK), createdAt, updatedAt.
+ * <b>Inherited from TenantEntity:</b> id, tenantId, clinic (clinic_id FK).
  *
  * <b>Cascade rules:</b>
  * <ul>
@@ -31,15 +29,16 @@ import java.util.List;
  * </ul>
  *
  * <b>Business rule (enforced in service):</b>
- * When {@code noRefiereAlergias = true}, the {@code alergias} list must be empty.
+ * When {@code hasAllergies = false}, the {@code allergies} list must be empty.
  */
 
 @Entity
-@Table(name = "medical_history")
+@Table(name = "medical_histories")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class MedicalHistory extends TenantEntity {
 
     @Id
@@ -59,7 +58,7 @@ public class MedicalHistory extends TenantEntity {
     @Column(name = "odontogram_type")
     private OdontogramType odontogramType;
 
-    @Column(name = "path_medical_history", columnDefinition = "TEXT")
+    @Column(name = "past_medical_history", columnDefinition = "TEXT")
     private String pastMedicalHistory;
 
     @Column(name = "observations", columnDefinition = "TEXT")
@@ -69,11 +68,11 @@ public class MedicalHistory extends TenantEntity {
      * When true: patient reports no allergies.
      * must ensure the {allergies} list remains empty.
      */
-    @Column(name = "no_allergies_reported", nullable = false)
-    private Boolean noAllergiesReported = false;
+    @Column(name = "has_allergies", nullable = false)
+    private Boolean hasAllergies = false;
 
     @Column(name = "daily_medication", columnDefinition = "TEXT")
-    private String daily_Medication;
+    private String dailyMedication;
 
     // ── Many-to-one relationships ──────────────────────────────────────────────
 
@@ -102,11 +101,46 @@ public class MedicalHistory extends TenantEntity {
     // ── One-to-many child collections ──────────────────────────────────────────
 
     @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ToothRecord> odontogramRecords;
+    private List<ToothRecord> toothRecords;
 
     @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PatientAllergy> allergies;
 
     @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ComplementaryExam> exams;
+
+    public void addToothRecords(List<ToothRecord> toothRecords) {
+
+        if ( toothRecords.isEmpty() ) return;
+
+        if( this.toothRecords == null || this.toothRecords.isEmpty() ) {
+            setToothRecords(toothRecords);
+        }
+        else{
+            //I chose "add" instead of "addAll" because otherwise it would overwrite the other previously saved tooth records with the new ones.
+            this.toothRecords.forEach( t -> this.toothRecords.add( t ) );
+        }
+    }
+
+
+    public void addAllergies(List<PatientAllergy> allergies) {
+
+        if ( allergies.isEmpty() ) return;
+
+        if( this.allergies == null || this.allergies.isEmpty() ) {
+            setAllergies(allergies);
+        }
+        else{
+            //I chose "add" instead of "addAll" because otherwise it would overwrite the other previously saved allergies with the new ones.
+            allergies.forEach( a -> this.allergies.add( a ) );
+        }
+    }
+
+    public boolean isToothRecordsListEmpty() {
+        return this.toothRecords == null || this.toothRecords.isEmpty();
+    }
+
+    public boolean isAllergiesListEmpty() {
+        return this.allergies == null || this.allergies.isEmpty();
+    }
 }
