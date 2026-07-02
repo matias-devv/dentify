@@ -52,10 +52,10 @@ public class MedicalHistoryController {
     }
 
     @PreAuthorize("hasRole('DENTIST')")
-    @PutMapping("/{patientId}/{medicalHistoryId}")
-    public ResponseEntity<EditMedicalHistoryResponse> editMedicalHistory(@RequestBody EditMedicalHistoryRequest request, @AuthenticationPrincipal String username,
-                                                                         @PathVariable Long patientId, @PathVariable Long medicalHistoryId){
+    @PatchMapping("/{patientId}/{medicalHistoryId}")
+    public ResponseEntity<EditMedicalHistoryResponse> updateMedicalHistory(@RequestBody @Valid EditMedicalHistoryRequest request, @AuthenticationPrincipal String username,
+                                                                          @PathVariable Long patientId, @PathVariable Long medicalHistoryId){
 
-        return ResponseEntity.status(HttpStatus.OK).body( medicalHistoryService.editMedicalHistory(request, username, patientId, medicalHistoryId) );
+        return ResponseEntity.status(HttpStatus.OK).body( medicalHistoryService.updateMedicalHistory(request, username, patientId, medicalHistoryId) );
     }
 }
