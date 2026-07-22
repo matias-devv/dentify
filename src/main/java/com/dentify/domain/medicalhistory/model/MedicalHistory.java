@@ -113,13 +113,11 @@ public class MedicalHistory extends TenantEntity {
 
         if ( toothRecords.isEmpty() ) return;
 
-        if( this.toothRecords == null || this.toothRecords.isEmpty() ) {
-            setToothRecords(toothRecords);
+        if ( this.toothRecords == null ) {
+            this.toothRecords = new ArrayList<>();
         }
-        else{
-            //I chose "add" instead of "addAll" because otherwise it would overwrite the other previously saved tooth records with the new ones.
-            this.toothRecords.forEach( t -> this.toothRecords.add( t ) );
-        }
+
+        this.toothRecords.addAll( toothRecords );
     }
 
 
@@ -142,5 +140,14 @@ public class MedicalHistory extends TenantEntity {
 
     public boolean isAllergiesListEmpty() {
         return this.allergies == null || this.allergies.isEmpty();
+    }
+
+    public boolean isOdontogramTypeNull() {
+
+        if ( this.getOdontogramType() == null ) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
