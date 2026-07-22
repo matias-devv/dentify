@@ -7,6 +7,7 @@ import com.dentify.domain.medicalhistory.dto.response.EditMedicalHistoryResponse
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistoryDetailResponse;
 import com.dentify.domain.medicalhistory.dto.response.MedicalHistorySummaryResponse;
 import com.dentify.domain.medicalhistory.service.IMedicalHistoryService;
+import com.dentify.domain.toothrecord.dto.request.AddToothRecordsRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -57,5 +58,12 @@ public class MedicalHistoryController {
                                                                           @PathVariable Long patientId, @PathVariable Long medicalHistoryId){
 
         return ResponseEntity.status(HttpStatus.OK).body( medicalHistoryService.updateMedicalHistory(request, username, patientId, medicalHistoryId) );
+    }
+
+    @PreAuthorize("hasRole('DENTIST')")
+    @PostMapping("/tooth-records/{medicalHistoryId}")
+    public ResponseEntity<List> addToothRecordsToMedicalHistory(@RequestBody @Valid AddToothRecordsRequest request, @PathVariable Long medicalHistoryId,
+                                                                @AuthenticationPrincipal String username){
+        return ResponseEntity.status(HttpStatus.CREATED).body( medicalHistoryService.addToothRecordsToMedicalHistory( request, medicalHistoryId, username ) );
     }
 }
