@@ -1,5 +1,6 @@
 package com.dentify.domain.toothrecord.service;
 
+import com.dentify.domain.toothrecord.dto.response.ToothRecordResponse;
 import com.dentify.exception.diagnosistypecatalog.DiagnosisTypeNotFoundException;
 import com.dentify.domain.toothrecord.dto.request.CreateToothRecordItem;
 import com.dentify.domain.toothrecord.enums.OdontogramType;
@@ -29,8 +30,7 @@ public interface IToothRecordService {
      * <p>
      * Each tooth record is validated for a resolvable `DiagnosisTypeCatalog` entry, where non-global entries must belong to the authenticated dentist's `clinic_id`.
      * <p>
-     * The constructed records receive the back‑reference to their parent
-     * `MedicalHistory` aggregate and are returned with `diagnosisType` already
+     * The constructed records receive the back‑reference to their parent. `MedicalHistory` aggregate and are returned with `diagnosisType` already
      * resolved. The caller is responsible for assigning the returned list to
      * `medicalHistory.toothRecords` and executing a single `save()` call.
      *
@@ -48,7 +48,7 @@ public interface IToothRecordService {
      * @throws DiagnosisTypeNotFoundException if a referenced diagnosis type cannot be resolved
      * @throws InvalidPieceNumberException if any piece number falls outside the valid FDI range
      */
-    List<ToothRecord> buildToothRecordsForMedicalHistory(List<CreateToothRecordItem> toothRecordItems, OdontogramType odontogramType, Long clinicId,
-                                                         MedicalHistory medicalHistory);
+    List<ToothRecord> processToothRecords(List<CreateToothRecordItem> toothRecordItems, OdontogramType odontogramType, Long clinicId, MedicalHistory medicalHistory);
 
+    List<ToothRecordResponse> toResponseList(List<ToothRecord> toothRecords);
 }
