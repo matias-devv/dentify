@@ -18,12 +18,15 @@ import com.dentify.domain.patient.service.IPatientService;
 import com.dentify.domain.patientallergy.dto.response.PatientAllergyDetailResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
 import com.dentify.domain.patientallergy.service.IPatientAllergyService;
+import com.dentify.domain.toothrecord.dto.request.AddToothRecordsRequest;
+import com.dentify.domain.toothrecord.dto.response.ToothRecordResponse;
 import com.dentify.domain.toothrecord.model.ToothRecord;
 import com.dentify.domain.toothrecord.service.IToothRecordService;
 import com.dentify.exception.medicalhistory.MedicalHistoryNotFoundException;
 import com.dentify.exception.medicalhistory.OdontogramTypeConflictException;
 import com.dentify.exception.patient.PatientNotFoundException;
 import com.dentify.exception.patientallergy.AllergyInconsistencyException;
+import com.dentify.exception.toothrecord.MissingOdontogramTypeException;
 import com.dentify.mapper.MedicalHistoryMapper;
 import com.dentify.mapper.PatientAllergyMapper;
 import com.dentify.security.multitenancy.TenantContext;
@@ -56,6 +59,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
 
     @Override
+    @Transactional
     public CreateMedicalHistoryResponse createMedicalHistory(Long patientId, String username, CreateMedicalHistoryRequest request) {
 
         Dentist dentist = dentistService.findDentistByAuthUserUsername( username );
@@ -87,8 +91,8 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
         if ( request.getToothRecords() != null && !request.getToothRecords().isEmpty() ) {
 
-            List<ToothRecord> toothRecords = toothRecordService.buildToothRecordsForMedicalHistory( request.getToothRecords(), request.getOdontogramType(),
-                                                                                                    clinicId, medicalHistory);
+            List<ToothRecord> toothRecords = toothRecordService.processToothRecords( request.getToothRecords(), request.getOdontogramType(), clinicId, medicalHistory);
+
             medicalHistory.addToothRecords(toothRecords);
         }
     }
@@ -131,7 +135,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
         Patient patient =  patientService.findPatientById(patientId);
 
-        MedicalHistory medicalHistory = this.findMedicalHistoryBaseById(medicalHistoryId);
+        MedicalHistory medicalHistory = this.findMedicalHistoryBaseByIdAndClinicId( medicalHistoryId, patient.getClinic().getId() );
 
         //add necessary collections to the actual object
         medicalHistoryRepository.findWithToothRecords(medicalHistoryId);
@@ -145,10 +149,11 @@ public class MedicalHistoryService implements IMedicalHistoryService {
         return mapper.buildMedicalHistoryDetailResponse(medicalHistory, patient, allergies);
     }
 
-    public MedicalHistory findMedicalHistoryBaseById(Long medicalHistoryId) {
-        return medicalHistoryRepository.findMedicalHistoryBaseById(medicalHistoryId)
+    public MedicalHistory findMedicalHistoryBaseByIdAndClinicId(Long medicalHistoryId, Long clinicId) {
+        return medicalHistoryRepository.findMedicalHistoryBaseByIdAndClinicId( medicalHistoryId, clinicId )
                                        .orElseThrow( ()-> new MedicalHistoryNotFoundException("The medical history with this id: " + medicalHistoryId + " was not found") );
     }
+
 
     private void validateOwnershipOfMedicalHistory(Long ownerPatientId, Long patientRequestedId) {
 
@@ -184,7 +189,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
         clinicService.verifyIfTheyBelongToTheSameClinic( dentist.getClinic().getId(), patient.getClinic().getId() );
 
-        MedicalHistory medicalHistory = this.findMedicalHistoryBaseById(medicalHistoryId);
+        MedicalHistory medicalHistory = this.findMedicalHistoryBaseByIdAndClinicId( medicalHistoryId, dentist.getClinic().getId() );
 
         this.verifyIfMedicalHistoryBelongsToThisPatient( medicalHistory, patient.getId_patient() );
         this.checkRequestedOdontogramType(request, medicalHistory);
@@ -233,4 +238,47 @@ public class MedicalHistoryService implements IMedicalHistoryService {
         }
         //If no allergy records exist -> changing to false the field "hasAllergies" is freely permitted
     }
+
+    /**
+     * Orchestrates {@code POST /api/medical-histories/{medicalHistoryId}}: resolves the acting dentist, loads the target (already existing)
+     * {@link MedicalHistory}, guards against a missing {@code odontogramType}, validates and builds the new {@link ToothRecord} entities
+     * via {processToothRecords}, appends them to the medical history, persists, and maps
+     * the created records to the response contract.
+     *
+     * <p>No explicit clinic-ownership check is performed here: (one {@code Clinic} maps to exactly one tenant, and cross-clinic access must
+     * surface identically to cross-tenant access), the tenant-scoped lookup performed by { findMedicalHistoryBaseByIdAndClinic(Long) }
+     * already covers both cases.
+     */
+    @Override
+    @Transactional
+    public List<ToothRecordResponse> addToothRecordsToMedicalHistory(AddToothRecordsRequest request, Long medicalHistoryId, String username) {
+
+        Dentist dentist = dentistService.findDentistByAuthUserUsername(username);
+
+        MedicalHistory medicalHistory = this.findMedicalHistoryWithToothRecordsByIdAndClinicId( medicalHistoryId, dentist.getClinic().getId() );
+
+        this.requireOdontogramTypeConfigured(medicalHistory);
+
+        List<ToothRecord> toothRecords = toothRecordService.processToothRecords( request.toothRecordItems(), medicalHistory.getOdontogramType(),
+                                                                                 dentist.getClinic().getId(), medicalHistory);
+        medicalHistory.addToothRecords(toothRecords);
+
+        medicalHistoryRepository.save(medicalHistory);
+
+        return toothRecordService.toResponseList(toothRecords);
+    }
+
+    private MedicalHistory findMedicalHistoryWithToothRecordsByIdAndClinicId(Long medicalHistoryId, Long clinicId) {
+
+        return medicalHistoryRepository.findMedicalHistoryWithToothRecordsByIdAndClinicId( medicalHistoryId, clinicId )
+                                       .orElseThrow( ()-> new MedicalHistoryNotFoundException("The medical history with this id: " + medicalHistoryId + " was not found") );
+    }
+
+    private void requireOdontogramTypeConfigured(MedicalHistory medicalHistory) {
+
+        if ( medicalHistory.isOdontogramTypeNull() ) {
+            throw new MissingOdontogramTypeException("The medical history with this id: " + medicalHistory.getId() + " has no odontogram type configured");
+        }
+    }
+
 }
