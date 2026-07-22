@@ -32,14 +32,28 @@ public interface IMedicalHistoryRepository extends JpaRepository<MedicalHistory,
     int countExamsByMedicalHistoryId(@Param("medicalHistoryId") Long medicalHistoryId);
 
     @Query("""
-    SELECT mh FROM MedicalHistory mh
-    LEFT JOIN FETCH mh.patient
-    LEFT JOIN FETCH mh.dentist d
-    LEFT JOIN FETCH d.userProfile
-    LEFT JOIN FETCH mh.editedBy
-    WHERE mh.id = :id
+        SELECT mh FROM MedicalHistory mh
+        LEFT JOIN FETCH mh.patient
+        LEFT JOIN FETCH mh.dentist d
+        LEFT JOIN FETCH d.userProfile
+        LEFT JOIN FETCH mh.editedBy
+        WHERE mh.id = :id
+          AND d.clinic.id = :clinicId
     """)
-    Optional<MedicalHistory> findMedicalHistoryBaseById(@Param("id") Long id);
+    Optional<MedicalHistory> findMedicalHistoryBaseByIdAndClinicId(@Param("id") Long id, @Param("clinicId") Long clinicId);
+
+    @Query("""
+        SELECT DISTINCT mh
+        FROM MedicalHistory mh
+        LEFT JOIN FETCH mh.patient
+        LEFT JOIN FETCH mh.dentist d
+        LEFT JOIN FETCH d.userProfile
+        LEFT JOIN FETCH mh.editedBy
+        LEFT JOIN FETCH mh.toothRecords
+        WHERE mh.id = :id
+          AND d.clinic.id = :clinicId
+    """)
+    Optional<MedicalHistory> findMedicalHistoryWithToothRecordsByIdAndClinicId(@Param("id") Long id, @Param("clinicId") Long clinicId);
 
     @Query("""
     SELECT mh FROM MedicalHistory mh
