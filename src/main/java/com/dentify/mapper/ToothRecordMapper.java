@@ -16,8 +16,8 @@ import java.util.Map;
 @Component
 public class ToothRecordMapper {
 
-    public List<ToothRecord> buildToothRecordList( List<CreateToothRecordItem> toothRecordItems,
-                                                   Map<Long, DiagnosisTypeCatalog> resolvedDiagnoses, MedicalHistory medicalHistory ) {
+    public List<ToothRecord> buildToothRecordList( List<CreateToothRecordItem> toothRecordItems, Map<Long, DiagnosisTypeCatalog> resolvedDiagnoses,
+                                                   MedicalHistory medicalHistory ) {
 
         List<ToothRecord> records = new ArrayList<>();
 
@@ -52,7 +52,7 @@ public class ToothRecordMapper {
 
         List<ToothRecordResponse> responseList = new ArrayList<>( records.size() );
 
-        records.forEach( record -> responseList.add( toResponse(record) ) );
+        records.forEach( record -> responseList.add( this.toResponse(record) ) );
 
         return responseList;
     }
