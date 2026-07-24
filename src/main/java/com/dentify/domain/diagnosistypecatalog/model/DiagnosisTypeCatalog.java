@@ -38,8 +38,8 @@ public class DiagnosisTypeCatalog {
 
     /** Symbol type used to render the glyph on the odontogram canvas. */
     @Enumerated(EnumType.STRING)
-    @Column(name = "simbol")
-    private DiagnosisSymbol simbol;
+    @Column(name = "symbol")
+    private DiagnosisSymbol symbol;
 
     /** True = system predefined; false = clinic custom. */
     @Column(name = "is_global", nullable = false)
