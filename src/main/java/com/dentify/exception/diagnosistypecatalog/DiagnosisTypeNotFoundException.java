@@ -1,4 +1,4 @@
-package com.dentify.domain.diagnosistypecatalog.exception;
+package com.dentify.exception.diagnosistypecatalog;
 
 import com.dentify.exception.dto.AppException;
 
