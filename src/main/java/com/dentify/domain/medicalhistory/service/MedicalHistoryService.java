@@ -27,6 +27,7 @@ import com.dentify.exception.medicalhistory.OdontogramTypeConflictException;
 import com.dentify.exception.patient.PatientNotFoundException;
 import com.dentify.exception.patientallergy.AllergyInconsistencyException;
 import com.dentify.exception.toothrecord.MissingOdontogramTypeException;
+import com.dentify.exception.toothrecord.ToothRecordNotFoundException;
 import com.dentify.mapper.MedicalHistoryMapper;
 import com.dentify.mapper.PatientAllergyMapper;
 import com.dentify.security.multitenancy.TenantContext;
@@ -279,6 +280,21 @@ public class MedicalHistoryService implements IMedicalHistoryService {
         if ( medicalHistory.isOdontogramTypeNull() ) {
             throw new MissingOdontogramTypeException("The medical history with this id: " + medicalHistory.getId() + " has no odontogram type configured");
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteToothRecord(Long medicalHistoryId, Long toothRecordId, String username) {
+
+        Dentist dentist = dentistService.findDentistByAuthUserUsername(username);
+
+        MedicalHistory medicalHistory = this.findMedicalHistoryWithToothRecordsByIdAndClinicId( medicalHistoryId, dentist.getClinic().getId() );
+
+        ToothRecord toothRecord = medicalHistory.getToothRecordOrThrow( toothRecordId );
+
+        medicalHistory.getToothRecords().remove( toothRecord );
+
+        medicalHistoryRepository.save( medicalHistory );
     }
 
 }
