@@ -1,12 +1,13 @@
 package com.dentify.mapper;
 
 import com.dentify.domain.allergycatalog.model.AllergyCatalog;
-import com.dentify.domain.medicalhistory.dto.response.MedicalHistoryDetailResponse;
 import com.dentify.domain.medicalhistory.model.MedicalHistory;
 import com.dentify.domain.patientallergy.dto.response.PatientAllergyDetailResponse;
+import com.dentify.domain.patientallergy.dto.response.PatientAllergyResponse;
 import com.dentify.domain.patientallergy.model.PatientAllergy;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -34,4 +35,22 @@ public class PatientAllergyMapper {
                                                  patientAllergy.getAllergy().getName(),
                                                  patientAllergy.getAllergy().getActive()) ;
     }
+
+    public List<PatientAllergyResponse> buildPatientAllergyResponseList(List<PatientAllergy> allergies) {
+
+        List<PatientAllergyResponse> patientAllergyResponseList = new ArrayList<>();
+
+        for ( PatientAllergy allergy : allergies ){
+            patientAllergyResponseList.add( this.buildPatientAllergyResponseObject(allergy) );
+        }
+        return patientAllergyResponseList;
+    }
+
+    public PatientAllergyResponse buildPatientAllergyResponseObject(PatientAllergy allergy) {
+        return new PatientAllergyResponse( allergy.getId(),
+                                            allergy.getAllergy().getId(),
+                                            allergy.getAllergy().getName(),
+                                            allergy.getNotes() );
+    }
+
 }
