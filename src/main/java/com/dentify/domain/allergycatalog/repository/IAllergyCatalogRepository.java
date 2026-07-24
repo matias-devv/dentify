@@ -24,4 +24,11 @@ public interface IAllergyCatalogRepository extends JpaRepository<AllergyCatalog,
     @Query("SELECT a.name FROM AllergyCatalog a")
     Set<String> findAllNames();
 
+    @Query("""
+        SELECT ac
+        FROM AllergyCatalog ac
+        WHERE ac.active = true
+        ORDER BY ac.name ASC
+    """)
+    List<AllergyCatalog> findAllActiveOrderByNameAsc();
 }
