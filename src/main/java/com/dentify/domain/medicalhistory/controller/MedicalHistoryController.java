@@ -66,4 +66,13 @@ public class MedicalHistoryController {
                                                                 @AuthenticationPrincipal String username){
         return ResponseEntity.status(HttpStatus.CREATED).body( medicalHistoryService.addToothRecordsToMedicalHistory( request, medicalHistoryId, username ) );
     }
+
+    @DeleteMapping("/tooth-records/{medicalHistoryId}/{toothRecordId}")
+    @PreAuthorize("hasRole('DENTIST')")
+    public ResponseEntity<Void> deleteToothRecord(@AuthenticationPrincipal String username, @PathVariable Long medicalHistoryId, @PathVariable Long toothRecordId) {
+
+        medicalHistoryService.deleteToothRecord(medicalHistoryId, toothRecordId, username);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 }
