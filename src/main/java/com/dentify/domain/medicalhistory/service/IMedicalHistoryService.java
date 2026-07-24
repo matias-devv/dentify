@@ -23,4 +23,6 @@ public interface IMedicalHistoryService {
     public EditMedicalHistoryResponse updateMedicalHistory(EditMedicalHistoryRequest request, String username, Long patientId, Long medicalHistoryId);
 
     public List<ToothRecordResponse> addToothRecordsToMedicalHistory(@Valid AddToothRecordsRequest request, Long medicalHistoryId, String username);
+
+    public void deleteToothRecord(Long medicalHistoryId, Long toothRecordId, String username);
 }
