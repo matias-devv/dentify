@@ -7,6 +7,7 @@ import com.dentify.domain.patientallergy.model.PatientAllergy;
 import com.dentify.domain.toothrecord.enums.OdontogramType;
 import com.dentify.domain.toothrecord.model.ToothRecord;
 import com.dentify.domain.userProfile.model.UserProfile;
+import com.dentify.exception.toothrecord.ToothRecordNotFoundException;
 import com.dentify.security.multitenancy.TenantEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -149,5 +150,12 @@ public class MedicalHistory extends TenantEntity {
         } else {
             return false;
         }
+    }
+
+    public ToothRecord getToothRecordOrThrow(Long toothRecordId) {
+        return toothRecords.stream()
+                           .filter(tr -> tr.getId().equals( toothRecordId ) )
+                           .findFirst()
+                           .orElseThrow(() -> new ToothRecordNotFoundException( "The tooth record with id " + toothRecordId + " was not found" ) );
     }
 }
