@@ -1,8 +1,10 @@
 package com.dentify.domain.allergycatalog.service;
 
+import com.dentify.domain.allergycatalog.dto.response.AllergyCatalogResponse;
 import com.dentify.domain.allergycatalog.model.AllergyCatalog;
 import com.dentify.domain.allergycatalog.repository.IAllergyCatalogRepository;
 import com.dentify.exception.allergycatalog.AllergiesCatalogNotFoundException;
+import com.dentify.mapper.AllergyCatalogMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,9 @@ import java.util.Set;
 public class AllergyCatalogService implements IAllergyCatalogService {
 
     private final IAllergyCatalogRepository allergyCatalogRepository;
+
+    //mapper
+    private final AllergyCatalogMapper allergyCatalogMapper;
 
     private static final List<String> DENTAL_ALLERGY_CATALOG = List.of(
 
@@ -89,6 +94,14 @@ public class AllergyCatalogService implements IAllergyCatalogService {
         allergyCatalogRepository.saveAll(toSave);
 
         return toSave.size();
+    }
+
+    @Override
+    public List<AllergyCatalogResponse> findAllActiveAllergies() {
+        return allergyCatalogRepository.findAllActiveOrderByNameAsc()
+                                       .stream()
+                                       .map(allergyCatalogMapper::toResponse)
+                                       .toList();
     }
 
 }
