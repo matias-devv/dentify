@@ -3,18 +3,15 @@ package com.dentify.domain.patientallergy.model;
 import com.dentify.domain.allergycatalog.model.AllergyCatalog;
 import com.dentify.domain.medicalhistory.model.MedicalHistory;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * Intermediate table
  *
  * Links a medical history to a catalogued allergy.
  * <p>
- * Service rule: records in this table must not exist when the parent
- * {@code MedicalHistory.noReportAllergies} is {@code true}.
+ * Service rule:
+ * PatientAllergy records may exist only when MedicalHistory.hasAllergies = true.
  * </p>
  * Does not extend TenantEntity; tenant scope is reached via {@code MedicalHistory}.
  */
@@ -24,6 +21,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PatientAllergy {
 
     @Id
