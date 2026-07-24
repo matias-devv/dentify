@@ -1,9 +1,13 @@
 package com.dentify.domain.diagnosistypecatalog.service;
 
+import com.dentify.domain.clinic.model.Clinic;
+import com.dentify.domain.diagnosistypecatalog.dto.response.DiagnosisTypeCatalogResponse;
 import com.dentify.domain.diagnosistypecatalog.enums.DiagnosisSymbol;
 import com.dentify.domain.diagnosistypecatalog.model.DiagnosisTypeCatalog;
 import com.dentify.domain.diagnosistypecatalog.repository.IDiagnosisTypeCatalogRepository;
+import com.dentify.domain.userProfile.service.IUserProfileService;
 import com.dentify.exception.diagnosistypecatalog.DiagnosisTypeNotFoundException;
+import com.dentify.mapper.DiagnosisTypeCatalogMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +20,13 @@ import java.util.stream.Collectors;
 public class DiagnosisTypeCatalogService implements IDiagnosisTypeCatalogService{
 
     private final IDiagnosisTypeCatalogRepository diagnosisTypeCatalogRepository;
+
+    //services
+    private final IUserProfileService userProfileService;
+
+    //mapper
+    private final DiagnosisTypeCatalogMapper diagnosisTypeCatalogMapper;
+
 
     /**
      * System display name for every global symbol, except CUSTOM, which is reserved
@@ -59,7 +70,18 @@ public class DiagnosisTypeCatalogService implements IDiagnosisTypeCatalogService
         return toCreate.size();
     }
 
+    @Override
+    public List<DiagnosisTypeCatalogResponse> listAccessibleDiagnosisTypes(String username) {
+
+        Clinic clinic = userProfileService.findClinicByAuthUserUsername(username);
+
+        List<DiagnosisTypeCatalog> accessibleDiagnosis = diagnosisTypeCatalogRepository.findAllAccessible( clinic.getId() );
+
+        return diagnosisTypeCatalogMapper.toResponseList(accessibleDiagnosis);
+    }
+
     private DiagnosisTypeCatalog buildGlobalDiagnosisTypeCatalog(DiagnosisSymbol symbol, String name) {
+
         return DiagnosisTypeCatalog.builder()
                                    .name(name)
                                    .symbol(symbol)
@@ -81,20 +103,20 @@ public class DiagnosisTypeCatalogService implements IDiagnosisTypeCatalogService
 
         names.put(DiagnosisSymbol.ROOT_CANAL_TREATMENT,    "Root canal treatment");
         names.put(DiagnosisSymbol.INCURABLE_TOOTH_DECAY,   "Untreatable decay");
-        names.put(DiagnosisSymbol.MISSING_TOOTH,           "Missing tooth");
+        names.put(DiagnosisSymbol.MISSING_TOOTH,           "Missing tooth"); //blocks
         names.put(DiagnosisSymbol.SILICATE_FILLING,        "Silicate filling");
         names.put(DiagnosisSymbol.PARADENTOSIS,            "Periodontosis");
         names.put(DiagnosisSymbol.PERNO,                   "Post");
         names.put(DiagnosisSymbol.BRIDGE,                  "Bridge");
         names.put(DiagnosisSymbol.ORTHODONTICS,            "Orthodontics");
         names.put(DiagnosisSymbol.TREATABLE_DECAY,         "Treatable decay");
-        names.put(DiagnosisSymbol.EXTRACTION,              "Extraction");
+        names.put(DiagnosisSymbol.EXTRACTION,              "Extraction");//blocks
         names.put(DiagnosisSymbol.AMALGAM_FILLING,         "Amalgam filling");
         names.put(DiagnosisSymbol.ACRYLIC_FILLING,         "Acrylic filling");
         names.put(DiagnosisSymbol.CROWN,                   "Crown");
         names.put(DiagnosisSymbol.INLAY_ONLAY,             "Inlay/onlay");
         names.put(DiagnosisSymbol.REMOVABLE_PROSTHESIS,    "Removable prosthesis");
-        names.put(DiagnosisSymbol.IMPLANT,                 "Implant");
+        names.put(DiagnosisSymbol.IMPLANT,                 "Implant");//blocks
 
         return Collections.unmodifiableMap(names);
     }
