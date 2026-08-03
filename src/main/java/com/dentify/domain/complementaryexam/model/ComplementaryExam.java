@@ -36,9 +36,9 @@ public class ComplementaryExam {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Public URL returned by Cloudinary (or S3 signed/public URL). */
-    @Column(name = "file_url", nullable = false)
-    private String file_url;
+    // Object key from S3 signed
+    @Column(name = "object_key", nullable = false)
+    private String objectKey;
 
     /** Original filename as uploaded by the user (e.g. "rx_panoramica.png"). */
     @Column(name = "filename", nullable = false)
