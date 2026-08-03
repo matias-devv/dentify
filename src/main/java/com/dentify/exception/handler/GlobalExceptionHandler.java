@@ -14,9 +14,7 @@ import com.dentify.exception.dentist.DentistNotFoundException;
 import com.dentify.exception.diagnosistypecatalog.DiagnosisTypeNotFoundException;
 import com.dentify.exception.dto.AppException;
 import com.dentify.exception.dto.ErrorResponse;
-import com.dentify.exception.general.InvalidRequestDateException;
-import com.dentify.exception.general.InvalidRequestMonthException;
-import com.dentify.exception.general.NoFieldsToUpdateException;
+import com.dentify.exception.general.*;
 import com.dentify.exception.invitation.*;
 import com.dentify.exception.medicalhistory.MedicalHistoryNotFoundException;
 import com.dentify.exception.medicalhistory.OdontogramTypeConflictException;
@@ -36,10 +34,7 @@ import com.dentify.exception.schedule.ScheduleOverlapException;
 import com.dentify.exception.speciality.SpecialitiesRequiredException;
 import com.dentify.exception.speciality.SpecialityNotFoundException;
 import com.dentify.exception.tenant.TenantResourceNotFoundException;
-import com.dentify.exception.toothrecord.DuplicateToothRecordException;
-import com.dentify.exception.toothrecord.InvalidPieceNumberException;
-import com.dentify.exception.toothrecord.MissingOdontogramTypeException;
-import com.dentify.exception.toothrecord.ToothRecordFaceConflictException;
+import com.dentify.exception.toothrecord.*;
 import com.dentify.exception.treatment.TreatmentNotFoundException;
 import com.dentify.exception.user.AuthUserNotFoundException;
 import com.dentify.exception.user.UserAlreadyExistsException;
@@ -58,6 +53,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -133,6 +129,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ErrorResponse("FILE_TOO_LARGE", "File exceeds the maximum allowed size"));
+    }
+
     // ── Generic fallback ──────────────────────────────────────────────────────
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
@@ -172,7 +174,8 @@ public class GlobalExceptionHandler {
             InvalidProductPriceException.class,
             AllergyInconsistencyException.class,
             InvalidPieceNumberException.class,
-            MissingOdontogramTypeException.class
+            MissingOdontogramTypeException.class,
+            UnsupportedFileTypeException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(AppException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getErrorCode(), ex.getMessage()));
@@ -219,7 +222,8 @@ public class GlobalExceptionHandler {
             ReceiptNotFoundException.class,
             AllergiesCatalogNotFoundException.class,
             MedicalHistoryNotFoundException.class,
-            DiagnosisTypeNotFoundException.class
+            DiagnosisTypeNotFoundException.class,
+            ToothRecordNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFound(AppException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(ex.getErrorCode(), ex.getMessage()));
@@ -268,9 +272,18 @@ public class GlobalExceptionHandler {
             InvalidScheduleTimeException.class,
             InvalidAgendaDurationException.class,
             DuplicateToothRecordException.class,
-
+            FileTooLargeException.class,
+            EmptyFileException.class,
     })
     public ResponseEntity<ErrorResponse> handleUnprocessable(AppException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new ErrorResponse(ex.getErrorCode(), ex.getMessage()));
+    }
+
+    // ── 502 Bad Gateway ──────────────────────────────────────────────
+    @ExceptionHandler({
+        FileStorageException.class
+    })
+    public ResponseEntity<ErrorResponse> handleBadGateway(AppException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(ex.getErrorCode(), ex.getMessage()));
     }
 }
