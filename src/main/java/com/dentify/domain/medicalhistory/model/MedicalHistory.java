@@ -102,7 +102,7 @@ public class MedicalHistory extends TenantEntity {
     // ── One-to-many child collections ──────────────────────────────────────────
 
     @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ToothRecord> toothRecords;
+    private List<ToothRecord> toothRecords = new ArrayList<>();
 
     @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PatientAllergy> allergies;
@@ -157,5 +157,14 @@ public class MedicalHistory extends TenantEntity {
                            .filter(tr -> tr.getId().equals( toothRecordId ) )
                            .findFirst()
                            .orElseThrow(() -> new ToothRecordNotFoundException( "The tooth record with id " + toothRecordId + " was not found" ) );
+    }
+
+    public void addExam(ComplementaryExam exam) {
+
+        if ( this.exams == null ) {
+            this.exams = new ArrayList<>();
+        }
+
+        this.exams.add( exam );
     }
 }
